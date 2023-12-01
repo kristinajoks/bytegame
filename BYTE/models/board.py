@@ -64,7 +64,7 @@ class Board:
             self.board[row][col] = (self.board[row][col][0], pos + 1)
 
 
-    def move(self, movement):   
+    def move(self, screen, movement):   
         
         x1, y1 = self.get_field_start(movement[0], movement[1])
         x2, y2 = self.get_field_start(movement[2], movement[3])
@@ -81,7 +81,16 @@ class Board:
         #samo treba da izmenimo matricu da bi odgovarala pomerenoj slici
         # return isValid 
         # validan potez   
-        
+
+        #brisanje slika sa jednog i crtanje na drugom polju
+        #brisanje bita iz elementa matrice i dodavanje u drugi element matrice
+
+        #brisanje slike sa polja
+        # pygame.draw.rect(screen, (242, 206, 234), (row1 * self.squareSize + self.rectStart[0], col1 * self.squareSize + self.rectStart[1], self.squareSize, self.squareSize))
+        pygame.draw.rect(screen, (242, 206, 232), (0,0, 100, 100))
+        # rectst  = [self.rectStart[0] + row1 * self.squareSize, self.rectStart[1] + col1 * self.squareSize, self.squareSize, self.squareSize]
+        # pygame.draw.rect(screen, (242, 206, 234), rectst)
+
     def valid_move(self, row1, col1, row2, col2):
         if(row1 == row2 or col1 == col2):
             return None
