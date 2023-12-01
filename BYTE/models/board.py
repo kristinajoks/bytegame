@@ -3,13 +3,13 @@ from helpers.binary_helper import *
 
 
 class Board:
-    def __init__(self, dim):
+    def __init__(self, dim, rectSize, rectStart):
         self.dim = dim
         self.board=[[(bytes([0]), 0) for _ in range(dim)] for _ in range(dim)]
         self.bit = (dim-2)*dim/2
         self.byte = self.bit/8
-        self.squareSize = 560 / dim
-        self.rectStart = [500, 50]
+        self.squareSize = rectSize / dim
+        self.rectStart = rectStart
 
     def drawInitial(self, screen):
         x_offset = 0
@@ -43,13 +43,8 @@ class Board:
                 bit_image = pygame.image.load('BYTE\\assets\\black.gif') 
                 self.writeBit(row, col, 0)
 
-
-            #razmislicemo
-            for(i) in range( int(16/self.dim) - 1):
-                bit_image = pygame.transform.scale2x(bit_image)
-                
-            #bit_image = pygame.transform.scale(bit_image, (self.dim /4 * bit_image.get_width(), self.dim /4 * bit_image.get_height()))
-            pygame.Surface.blit(screen, bit_image, (rect[0] + self.squareSize / 4, rect[1] + self.squareSize / 4))
+            bit_image = pygame.transform.scale(bit_image, (self.squareSize/2, self.squareSize/2))    
+            pygame.Surface.blit(screen, bit_image, (rect[0] + self.squareSize / 4, rect[1] + self.squareSize / 2))
 
 
     def writeBit(self, row, col, bit):
@@ -69,11 +64,10 @@ class Board:
             self.board[row][col] = (self.board[row][col][0], pos + 1)
 
 
-    def move(self, movement):        
-        x1 = movement[0] - self.rectStart[0]
-        y1 = movement[1] - self.rectStart[1]
-        x2 = movement[2] - self.rectStart[0]
-        y2 = movement[3] - self.rectStart[1]
+    def move(self, movement):   
+        
+        x1, y1 = self.get_field_start(movement[0], movement[1])
+        x2, y2 = self.get_field_start(movement[2], movement[3])
 
         row1 = int(y1 / self.squareSize)
         col1 = int(x1 / self.squareSize)
@@ -84,6 +78,7 @@ class Board:
         if( isValid == None):
             return
         
+        #samo treba da izmenimo matricu da bi odgovarala pomerenoj slici
         # return isValid 
         # validan potez   
         
@@ -113,3 +108,6 @@ class Board:
             return "DL"
         elif(row2 == row1+1 and col2 == col1+1):
             return "DD"
+
+    def get_field_start(self, x, y):
+        return [x-self.rectStart[0], y-self.rectStart[1]]
