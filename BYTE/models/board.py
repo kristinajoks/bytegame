@@ -1,4 +1,6 @@
 import pygame
+from helpers.binary_helper import * 
+
 
 class Board:
     def __init__(self, dim):
@@ -55,20 +57,19 @@ class Board:
         
         if(bit == 1):
             byte = self.board[row][col][0]
+
             mask = 1 << pos
-            print(bin(mask))
-            #ovde nesto ne valja
-            byte &= ~mask
-            byte |= 1 << pos
+            negatedMask = bitwise_not_bytes(bytes([mask]))
+            maskedByte = bitwise_and_bytes(byte, negatedMask)
+            writtenByte = bitwise_or_bytes(maskedByte, bytes([1 << pos]))
             pos += 1
 
-            self.board[row][col] = (byte, pos)
+            self.board[row][col] = (writtenByte, pos)
         else:
             self.board[row][col] = (self.board[row][col][0], pos + 1)
 
-    def move(self, movement):
-        #Potez se sastoji od pozicije polja, mesta figure na steku i smer pomeranja (GL, GD, DL, DD)
-        
+
+    def move(self, movement):        
         x1 = movement[0] - self.rectStart[0]
         y1 = movement[1] - self.rectStart[1]
         x2 = movement[2] - self.rectStart[0]
@@ -79,14 +80,12 @@ class Board:
         row2 = int(x2 / self.squareSize)
         col2 = int(y2 / self.squareSize)
 
-        print(row1, col1, row2, col2)
-
-        #valid move function
         isValid = self.valid_move(row1, col1, row2, col2)
         if( isValid == None):
             return
-        else:
-            return isValid    
+        
+        # return isValid 
+        # validan potez   
         
     def valid_move(self, row1, col1, row2, col2):
         if(row1 == row2 or col1 == col2):
@@ -105,17 +104,12 @@ class Board:
             return diag
 
         
-
     def diagonal(self, row1, col1, row2, col2):
         if(row2 == row1-1 and col2 == col1-1):
-            #gore levo
             return "GL"
         elif(row2 == row1-1 and col2 == col1+1):
-            #gore desno
             return "GD"
         elif(row2 == row1+1 and col2 == col1-1):
-            #dole levo
             return "DL"
         elif(row2 == row1+1 and col2 == col1+1):
-            #dole desno
             return "DD"

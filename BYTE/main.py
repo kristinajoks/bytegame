@@ -22,8 +22,9 @@ while running:
             movement[0], movement[1] = pygame.mouse.get_pos()            
         elif event.type == pygame.MOUSEBUTTONUP:
             movement[2], movement[3] = pygame.mouse.get_pos()
-            print(board.move(movement))
-            
+            board.move(movement)
+        # elif event.type == pygame.MOUSEMOTION:
+
 
 
     pygame.display.flip()
