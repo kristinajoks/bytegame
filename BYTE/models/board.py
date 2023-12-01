@@ -6,7 +6,8 @@ class Board:
         self.board=[[(bytes([0]), 0) for _ in range(dim)] for _ in range(dim)]
         self.bit = (dim-2)*dim/2
         self.byte = self.bit/8
-        self.squareSize = 70
+        self.squareSize = 560 / dim
+        self.rectStart = [500, 50]
 
     def drawInitial(self, screen):
         x_offset = 0
@@ -15,7 +16,7 @@ class Board:
 
         for row in range(self.dim):
             for col in range(self.dim):
-                rect = [100 + x_offset, 50 + y_offset, self.squareSize, self.squareSize]
+                rect = [self.rectStart[0] + x_offset, self.rectStart[1] + y_offset, self.squareSize, self.squareSize]
 
                 if(row%2 == 0 and col %2 == 0 or row%2 == 1 and col%2 == 1):
                     color = (210,115,187)
@@ -36,5 +37,62 @@ class Board:
                 bit_image = pygame.image.load('BYTE\\assets\\white.gif')
             else:
                 bit_image = pygame.image.load('BYTE\\assets\\black.gif') 
-            bit_image = pygame.transform.scale2x(bit_image)
+
+            #razmislicemo
+            for(i) in range( int(16/self.dim) - 1):
+                bit_image = pygame.transform.scale2x(bit_image)
+                
+            #bit_image = pygame.transform.scale(bit_image, (self.dim /4 * bit_image.get_width(), self.dim /4 * bit_image.get_height()))
             pygame.Surface.blit(screen, bit_image, (rect[0] + self.squareSize / 4, rect[1] + self.squareSize / 4))
+
+    def move(self, movement):
+        #Potez se sastoji od pozicije polja, mesta figure na steku i smer pomeranja (GL, GD, DL, DD)
+        
+        x1 = movement[0] - self.rectStart[0]
+        y1 = movement[1] - self.rectStart[1]
+        x2 = movement[2] - self.rectStart[0]
+        y2 = movement[3] - self.rectStart[1]
+
+        row1 = int(y1 / self.squareSize)
+        col1 = int(x1 / self.squareSize)
+        row2 = int(x2 / self.squareSize)
+        col2 = int(y2 / self.squareSize)
+
+        #valid move function
+
+        if(row1 < 0 or row1 >= self.dim or col1 < 0 or col1 >= self.dim):
+            return
+        if(row2 < 0 or row2 >= self.dim or col2 < 0 or col2 >= self.dim):
+            return
+        if(self.board[row1][col1][1] == 0):
+            return
+        if(self.diagonal(row1, col1, row2, col2)):
+            return
+
+
+    def diagonal(self, row1, col1, row2, col2):
+        if(row1 == row2 or col1 == col2):
+            return False
+        # if(abs(row1 - row2) != abs(col1 - col2)):
+        #     return False
+
+        if(row1 < row2):
+            if(col1 < col2):
+                for i in range(1, row2 - row1):
+                    if(self.board[row1 + i][col1 + i][1] != 0):
+                        return False
+            else:
+                for i in range(1, row2 - row1):
+                    if(self.board[row1 + i][col1 - i][1] != 0):
+                        return False
+        else:
+            if(col1 < col2):
+                for i in range(1, row1 - row2):
+                    if(self.board[row1 - i][col1 + i][1] != 0):
+                        return False
+            else:
+                for i in range(1, row1 - row2):
+                    if(self.board[row1 - i][col1 - i][1] != 0):
+                        return False
+
+        return True
