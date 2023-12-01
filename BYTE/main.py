@@ -7,7 +7,7 @@ screen = pygame.display.set_mode((1200,650))
 name = pygame.display.set_caption("Byte Game")
 running = True
 
-movement = []
+movement = list(range(4))
 
 while running:
     board = Board(8)
@@ -22,7 +22,7 @@ while running:
             movement[0], movement[1] = pygame.mouse.get_pos()            
         elif event.type == pygame.MOUSEBUTTONUP:
             movement[2], movement[3] = pygame.mouse.get_pos()
-            board.move(movement)
+            print(board.move(movement))
             
 
 
