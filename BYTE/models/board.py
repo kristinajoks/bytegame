@@ -1,7 +1,6 @@
 import pygame
 from helpers.binary_helper import * 
 
-
 class Board:
     def __init__(self, dim, rectSize, rectStart):
         self.dim = dim
@@ -11,7 +10,18 @@ class Board:
         self.squareSize = rectSize / dim
         self.rectStart = rectStart
 
-    def drawInitial(self, screen):
+
+    def fillMatrix(self):
+         for row in range(self.dim):
+            for col in range(self.dim):
+                if(row != 0 and row != self.dim - 1):
+                    if(row%2 == 0 and col %2 == 0 or row%2 == 1 and col%2 == 1):
+                        if(row %2 == 0):
+                            self.writeBit(row, col, 1)
+                        else:
+                            self.writeBit(row, col, 0)
+
+    def drawMatrix(self, screen):
         x_offset = 0
         y_offset = 0
         color = ()
@@ -19,11 +29,22 @@ class Board:
         for row in range(self.dim):
             for col in range(self.dim):
                 rect = [self.rectStart[0] + x_offset, self.rectStart[1] + y_offset, self.squareSize, self.squareSize]
-
+                stack_offset = 0
+               
                 if(row%2 == 0 and col %2 == 0 or row%2 == 1 and col%2 == 1):
                     color = (210,115,187)
                     pygame.draw.rect(screen, color, rect)
-                    self.initialBits(screen, rect, row, col)
+
+                    if(self.board[row][col][1]>0):
+                        for _ in range(self.board[row][col][1]):
+                            if(self.readBit(row, col)):
+                                bit_image = pygame.image.load('BYTE\\assets\\white.gif')
+                            else:
+                                bit_image = pygame.image.load('BYTE\\assets\\black.gif') 
+
+                            bit_image = pygame.transform.scale(bit_image, (self.squareSize/2, self.squareSize/2))    
+                            pygame.Surface.blit(screen, bit_image, (rect[0] + self.squareSize / 4, rect[1] + self.squareSize / 2 + stack_offset))
+                            stack_offset -= 10 #bice druga vrednost
 
                 else:
                     color = (242,206,234)
@@ -33,21 +54,20 @@ class Board:
 
             x_offset = 0
             y_offset += self.squareSize
-            
-    def initialBits(self, screen, rect, row, col):
-        if(row != 0 and row != self.dim - 1):
-            if(row % 2 == 0):
-                bit_image = pygame.image.load('BYTE\\assets\\white.gif')
-                self.writeBit(row, col, 1)
-            else:
-                bit_image = pygame.image.load('BYTE\\assets\\black.gif') 
-                self.writeBit(row, col, 0)
-
-            bit_image = pygame.transform.scale(bit_image, (self.squareSize/2, self.squareSize/2))    
-            pygame.Surface.blit(screen, bit_image, (rect[0] + self.squareSize / 4, rect[1] + self.squareSize / 2))
 
 
-    def writeBit(self, row, col, bit):
+    def readBit(self, row, col):
+        pos = self.board[row][col][1]
+        if pos > 0:
+            byte = self.board[row][col][0]
+            mask = 1 << (pos - 1)
+            result = int.from_bytes(byte, byteorder="big") & mask
+            return result > 0
+        else:
+            return None
+
+
+    def writeBit(self, row, col, bit): #dodati poziciju sa koje se pomera
         pos = self.board[row][col][1]
         
         if(bit == 1):
@@ -61,7 +81,15 @@ class Board:
 
             self.board[row][col] = (writtenByte, pos)
         else:
-            self.board[row][col] = (self.board[row][col][0], pos + 1)
+            byte = self.board[row][col][0]
+
+            mask = 1 << pos
+            negatedMask = bitwise_not_bytes(bytes([mask]))
+            maskedByte = bitwise_and_bytes(byte, negatedMask)
+            writtenByte = bitwise_or_bytes(maskedByte, bytes([0 << pos]))
+            pos += 1
+
+            self.board[row][col] = (writtenByte, pos)
 
 
     def move(self, screen, movement):   
@@ -80,16 +108,14 @@ class Board:
         
         #samo treba da izmenimo matricu da bi odgovarala pomerenoj slici
         # return isValid 
-        # validan potez   
 
-        #brisanje slika sa jednog i crtanje na drugom polju
-        #brisanje bita iz elementa matrice i dodavanje u drugi element matrice
+        self.writeBit(row1, col1, 0)
+        pos = self.board[row1][col1][1]
+        self.board[row1][col1] = (self.board[row1][col1][0], pos - 2)
+        self.writeBit(row2, col2, 1)
 
-        #brisanje slike sa polja
-        # pygame.draw.rect(screen, (242, 206, 234), (row1 * self.squareSize + self.rectStart[0], col1 * self.squareSize + self.rectStart[1], self.squareSize, self.squareSize))
-        pygame.draw.rect(screen, (242, 206, 232), (0,0, 100, 100))
-        # rectst  = [self.rectStart[0] + row1 * self.squareSize, self.rectStart[1] + col1 * self.squareSize, self.squareSize, self.squareSize]
-        # pygame.draw.rect(screen, (242, 206, 234), rectst)
+        # self.drawMatrix(screen)
+        
 
     def valid_move(self, row1, col1, row2, col2):
         if(row1 == row2 or col1 == col2):
