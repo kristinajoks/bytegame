@@ -12,11 +12,11 @@ running = True
 movement = list(range(4))
 
 board = Board(8, 560, [500, 50])
-board.fillMatrix()
+# board.fillMatrix()
 
 
 white_black_options = ["White", "Black"]
-board_size_options = ["8x8", "10x10", "12x12"]
+board_size_options = ["8x8", "10x10", "16x16"]
 white_black_dropdown = Dropdown(screen, white_black_options, (50, 50))
 board_size_dropdown = Dropdown(screen, board_size_options, (50, 200))
 
@@ -33,10 +33,9 @@ while running:
 
         if event.type == pygame.MOUSEBUTTONDOWN:
             movement[0], movement[1] = pygame.mouse.get_pos()
-            rectStart = board.get_field_start(movement[0], movement[1])
         if event.type == pygame.MOUSEBUTTONUP:
             movement[2], movement[3] = pygame.mouse.get_pos()
-            board.move(screen, movement)
+            board.move(screen, movement, 0)
 
     white_black_option = white_black_dropdown.selected_option
     board_size_option = board_size_dropdown.selected_option
@@ -46,9 +45,8 @@ while running:
             board = Board(8, 560, [500, 50])
         elif board_size_option == "10x10":
             board = Board(10, 560, [500, 50])
-        elif board_size_option == "12x12":
-            board = Board(12, 560, [500, 50])
-    
+        elif board_size_option == "16x16":
+            board = Board(16, 560, [500, 50])
 
     white_black_dropdown.draw()
     board_size_dropdown.draw()

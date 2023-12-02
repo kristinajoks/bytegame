@@ -9,6 +9,7 @@ class Board:
         self.byte = self.bit/8
         self.squareSize = rectSize / dim
         self.rectStart = rectStart
+        self.fillMatrix()
 
 
     def fillMatrix(self):
