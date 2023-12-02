@@ -9,6 +9,7 @@ class Board:
         self.byte = self.bit/8
         self.squareSize = rectSize / dim
         self.rectStart = rectStart
+        self.currentPlayer = 1
         self.fillMatrix()
 
 
@@ -21,6 +22,7 @@ class Board:
                             self.writeBit(row, col, 1, self.board[row][col][1])
                         else:
                             self.writeBit(row, col, 0, self.board[row][col][1])
+
 
     def drawMatrix(self, screen):
         x_offset = 0
@@ -82,6 +84,7 @@ class Board:
         else:            
             writtenByte = bitwise_or_bytes(maskedByte, bytes([0 << pos]))
 
+        # u kom uslovu =
         if(positionTo >= pos):
             pos += 1
         else:
@@ -97,23 +100,45 @@ class Board:
 
         row1 = int(y1 / self.squareSize)
         col1 = int(x1 / self.squareSize)
-        row2 = int(x2 / self.squareSize)
-        col2 = int(y2 / self.squareSize)
+        row2 = int(y2 / self.squareSize)
+        col2 = int(x2 / self.squareSize)
+
+        print(row1, col1, "to", row2, col2)
 
         isValid = self.valid_move(row1, col1, row2, col2)
         if( isValid == None):
             return
 
+        if(self.board[row1][col1][1] == 1):
+            self.writeBit(row1, col1, 0, positionFrom)
+            pos = self.board[row1][col1][1]
+            self.board[row1][col1] = (self.board[row1][col1][0], pos)
+
+            self.writeBit(row2, col2, self.currentPlayer, self.board[row2][col2][1])
+
+            self.currentPlayer = 0 if self.currentPlayer == 1 else 1
+            return
+
+        #prvo procita bitove sa pozicije sa koje se pomera i cuvam ih u nizu
+        bits = []
+        
         #brise sa pozicije sa koje se pomera
-        self.writeBit(row1, col1, 0, positionFrom)
-        pos = self.board[row1][col1][1]
-        self.board[row1][col1] = (self.board[row1][col1][0], pos - 2)
+        numOfBits = self.board[row1][col1][1]
+        for i in range(positionFrom, numOfBits):
+            bits.append(self.readBit(row1, col1, i + 1))
+
+            self.writeBit(row1, col1, 0, i)
+            pos = self.board[row1][col1][1]
+            self.board[row1][col1] = (self.board[row1][col1][0], pos)
 
         #dodaje na poziciju na koju se pomera
-        self.writeBit(row2, col2, 1, self.board[row2][col2][1])
+        j=0
+        for i in range(positionFrom, numOfBits):
+            self.writeBit(row2, col2, bits[j], numOfBits + i)
+            j+=1
+
 
         
-
     def valid_move(self, row1, col1, row2, col2):
         if(row1 == row2 or col1 == col2):
             return None
@@ -123,7 +148,12 @@ class Board:
             return None
         if(self.board[row1][col1][1] == 0):
             return None
+        if(self.board[row2][col2][1] == 0):
+            return None
         
+        if(self.currentPlayer == 1 and row1 % 2 != 0 or self.currentPlayer == 0 and row1 % 2 != 1):
+            return None
+
         diag = self.diagonal(row1, col1, row2, col2)
         if(diag == None):
             return None
@@ -140,6 +170,7 @@ class Board:
             return "DL"
         elif(row2 == row1+1 and col2 == col1+1):
             return "DD"
+
 
     def get_field_start(self, x, y):
         return [x-self.rectStart[0], y-self.rectStart[1]]

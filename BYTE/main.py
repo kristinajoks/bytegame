@@ -35,6 +35,7 @@ while running:
             movement[0], movement[1] = pygame.mouse.get_pos()
         if event.type == pygame.MOUSEBUTTONUP:
             movement[2], movement[3] = pygame.mouse.get_pos()
+            print(movement)
             board.move(screen, movement, 0)
 
     white_black_option = white_black_dropdown.selected_option
