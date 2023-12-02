@@ -17,9 +17,9 @@ class Board:
                 if(row != 0 and row != self.dim - 1):
                     if(row%2 == 0 and col %2 == 0 or row%2 == 1 and col%2 == 1):
                         if(row %2 == 0):
-                            self.writeBit(row, col, 1)
+                            self.writeBit(row, col, 1, self.board[row][col][1])
                         else:
-                            self.writeBit(row, col, 0)
+                            self.writeBit(row, col, 0, self.board[row][col][1])
 
     def drawMatrix(self, screen):
         x_offset = 0
@@ -36,8 +36,8 @@ class Board:
                     pygame.draw.rect(screen, color, rect)
 
                     if(self.board[row][col][1]>0):
-                        for _ in range(self.board[row][col][1]):
-                            if(self.readBit(row, col)):
+                        for (i) in range(self.board[row][col][1]):
+                            if(self.readBit(row, col, i+1)):
                                 bit_image = pygame.image.load('BYTE\\assets\\white.gif')
                             else:
                                 bit_image = pygame.image.load('BYTE\\assets\\black.gif') 
@@ -56,8 +56,8 @@ class Board:
             y_offset += self.squareSize
 
 
-    def readBit(self, row, col):
-        pos = self.board[row][col][1]
+    def readBit(self, row, col, pos): #positionFrom
+        # pos = self.board[row][col][1]
         if pos > 0:
             byte = self.board[row][col][0]
             mask = 1 << (pos - 1)
@@ -67,32 +67,29 @@ class Board:
             return None
 
 
-    def writeBit(self, row, col, bit): #dodati poziciju sa koje se pomera
+    def writeBit(self, row, col, bit, positionTo): #dodati poziciju sa koje se pomera
         pos = self.board[row][col][1]
         
+        byte = self.board[row][col][0]
+
+        mask = 1 << pos
+        negatedMask = bitwise_not_bytes(bytes([mask]))
+        maskedByte = bitwise_and_bytes(byte, negatedMask)
+
         if(bit == 1):
-            byte = self.board[row][col][0]
-
-            mask = 1 << pos
-            negatedMask = bitwise_not_bytes(bytes([mask]))
-            maskedByte = bitwise_and_bytes(byte, negatedMask)
             writtenByte = bitwise_or_bytes(maskedByte, bytes([1 << pos]))
-            pos += 1
-
-            self.board[row][col] = (writtenByte, pos)
-        else:
-            byte = self.board[row][col][0]
-
-            mask = 1 << pos
-            negatedMask = bitwise_not_bytes(bytes([mask]))
-            maskedByte = bitwise_and_bytes(byte, negatedMask)
+        else:            
             writtenByte = bitwise_or_bytes(maskedByte, bytes([0 << pos]))
+
+        if(positionTo >= pos):
             pos += 1
+        else:
+            pos -= 1
 
-            self.board[row][col] = (writtenByte, pos)
+        self.board[row][col] = (writtenByte, pos)
 
 
-    def move(self, screen, movement):   
+    def move(self, screen, movement, positionFrom):   
         
         x1, y1 = self.get_field_start(movement[0], movement[1])
         x2, y2 = self.get_field_start(movement[2], movement[3])
@@ -105,16 +102,15 @@ class Board:
         isValid = self.valid_move(row1, col1, row2, col2)
         if( isValid == None):
             return
-        
-        #samo treba da izmenimo matricu da bi odgovarala pomerenoj slici
-        # return isValid 
 
-        self.writeBit(row1, col1, 0)
+        #brise sa pozicije sa koje se pomera
+        self.writeBit(row1, col1, 0, positionFrom)
         pos = self.board[row1][col1][1]
         self.board[row1][col1] = (self.board[row1][col1][0], pos - 2)
-        self.writeBit(row2, col2, 1)
 
-        # self.drawMatrix(screen)
+        #dodaje na poziciju na koju se pomera
+        self.writeBit(row2, col2, 1, self.board[row2][col2][1])
+
         
 
     def valid_move(self, row1, col1, row2, col2):
