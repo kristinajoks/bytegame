@@ -5,20 +5,20 @@ from helpers.button import Button
 
 pygame.init()
 
-screenWelcome = pygame.display.set_mode((300,300))
+screenWelcome = pygame.display.set_mode((300,500))
 nameWelcome = pygame.display.set_caption("Welcome!")
 
 starting = True
 running = False
 
-start_button = Button(screenWelcome, (0,0,0), 50, 220, 200, 50, "START", (255,255,255))
+start_button = Button(screenWelcome, (0,0,0), 50, 320, 200, 50, "START", (255,255,255))
 
 white_black_options = ["White", "Black"]
 board_size_options = ["8x8", "10x10", "16x16"]
 
 
 white_black_dropdown = Dropdown(screenWelcome, white_black_options, (50, 50))
-board_size_dropdown = Dropdown(screenWelcome, board_size_options, (150, 50))
+board_size_dropdown = Dropdown(screenWelcome, board_size_options, (50, 150))
 
 selected_white_black = None
 selected_board_size = None
