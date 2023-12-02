@@ -103,8 +103,6 @@ class Board:
         row2 = int(y2 / self.squareSize)
         col2 = int(x2 / self.squareSize)
 
-        print(row1, col1, "to", row2, col2)
-
         isValid = self.valid_move(row1, col1, row2, col2)
         if( isValid == None):
             return
@@ -128,6 +126,7 @@ class Board:
             bits.append(self.readBit(row1, col1, i + 1))
 
             self.writeBit(row1, col1, 0, i)
+            
             pos = self.board[row1][col1][1]
             self.board[row1][col1] = (self.board[row1][col1][0], pos)
 

@@ -72,7 +72,7 @@ while running:
             movement[0], movement[1] = pygame.mouse.get_pos()
         if event.type == pygame.MOUSEBUTTONUP:
             movement[2], movement[3] = pygame.mouse.get_pos()
-            board.move(screen, movement, 0)
+            board.move(screenGame, movement, 0)
 
     board.drawMatrix(screenGame)
 
