@@ -5,7 +5,7 @@ class Dropdown:
         self.screen = screen
         self.options = options
         self.pos = pos
-        self.rect = pygame.Rect(pos[0], pos[1], 150, 30)  # Pravimo okvir za dropdown listu
+        self.rect = pygame.Rect(pos[0], pos[1], 120, 30)
         self.is_open = False
         self.selected_option = None
 
@@ -38,3 +38,5 @@ class Dropdown:
                         return self.selected_option
         return None
 
+    def get_selected(self):
+        return self.selected_option
