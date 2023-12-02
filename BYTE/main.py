@@ -1,59 +1,83 @@
 import pygame
 from models.board import Board
 from helpers.drop_down import Dropdown
+from helpers.button import Button
 
 pygame.init()
-clock = pygame.time.Clock()
 
-screen = pygame.display.set_mode((1200,650))
-name = pygame.display.set_caption("Byte Game")
-running = True
+screenWelcome = pygame.display.set_mode((300,300))
+nameWelcome = pygame.display.set_caption("Welcome!")
 
-movement = list(range(4))
+starting = True
+running = False
 
-board = Board(8, 560, [500, 50])
-# board.fillMatrix()
-
+start_button = Button(screenWelcome, (0,0,0), 50, 220, 200, 50, "START", (255,255,255))
 
 white_black_options = ["White", "Black"]
 board_size_options = ["8x8", "10x10", "16x16"]
-white_black_dropdown = Dropdown(screen, white_black_options, (50, 50))
-board_size_dropdown = Dropdown(screen, board_size_options, (50, 200))
 
-while running:
-    background = screen.fill((245, 243, 240))
-    board.drawMatrix(screen)
+
+white_black_dropdown = Dropdown(screenWelcome, white_black_options, (50, 50))
+board_size_dropdown = Dropdown(screenWelcome, board_size_options, (150, 50))
+
+selected_white_black = None
+selected_board_size = None
+
+while starting:
+    background = screenWelcome.fill((245, 243, 240))
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            running = False
+            starting = False
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            mouse_pos = pygame.mouse.get_pos()
+            if start_button.is_clicked(mouse_pos):  
+                if selected_board_size is not None and selected_white_black is not None:
+                    starting = False
+                    running = True 
+
+        selected_white_black = white_black_dropdown.get_selected()
+        selected_board_size = board_size_dropdown.get_selected()
 
         white_black_dropdown.handle_event(event)
         board_size_dropdown.handle_event(event)
 
+        if selected_board_size is not None:
+            if selected_board_size == "8x8":
+                board = Board(8, 560, [50, 50])
+            elif selected_board_size == "10x10":
+                board = Board(10, 560, [50, 50])
+            elif selected_board_size == "16x16":
+                board = Board(16, 560, [50, 50])
+
+    white_black_dropdown.draw()
+    board_size_dropdown.draw()
+
+    start_button.draw()
+
+    pygame.display.flip()
+
+movement = list(range(4))
+screenGame = pygame.display.set_mode((650,650))
+nameGame = pygame.display.set_caption("Byte Game")
+
+while running:
+    background = screenGame.fill((245, 243, 240))
+    board.drawMatrix(screenGame)
+
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
         if event.type == pygame.MOUSEBUTTONDOWN:
             movement[0], movement[1] = pygame.mouse.get_pos()
         if event.type == pygame.MOUSEBUTTONUP:
             movement[2], movement[3] = pygame.mouse.get_pos()
-            print(movement)
             board.move(screen, movement, 0)
 
-    white_black_option = white_black_dropdown.selected_option
-    board_size_option = board_size_dropdown.selected_option
-
-    if board_size_option is not None:
-        if board_size_option == "8x8":
-            board = Board(8, 560, [500, 50])
-        elif board_size_option == "10x10":
-            board = Board(10, 560, [500, 50])
-        elif board_size_option == "16x16":
-            board = Board(16, 560, [500, 50])
-
-    white_black_dropdown.draw()
-    board_size_dropdown.draw()
-    
-    board.drawMatrix(screen)
+    board.drawMatrix(screenGame)
 
     pygame.display.flip()
-    clock.tick(5)
+   
+
+pygame.quit()
 
