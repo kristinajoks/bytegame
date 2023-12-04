@@ -12,7 +12,7 @@ class Board:
         self.rectStart = rectStart
         self.currentPlayer = 1
         self.fillMatrix()
-        self.maxStacks = (self.dim-2 * self.dim)/16
+        self.maxStacks = ((self.dim-2) * self.dim)/16
         self.users = [User(0), User(1)] #sluzi samo za dodavanje poena
         
 
@@ -50,7 +50,13 @@ class Board:
 
                             bit_image = pygame.transform.scale(bit_image, (self.squareSize/2, self.squareSize/2))    
                             pygame.Surface.blit(screen, bit_image, (rect[0] + self.squareSize / 4, rect[1] + self.squareSize / 2 + stack_offset))
+                            
+                            outline_image = pygame.image.load('BYTE\\assets\\outline.gif')
+                            outline_image = pygame.transform.scale(outline_image, (self.squareSize/2, self.squareSize/2))
+                            pygame.Surface.blit(screen, outline_image, (rect[0] + self.squareSize / 4, rect[1] + self.squareSize / 2 + stack_offset))
+                            
                             stack_offset -= 10 
+
 
                 else:
                     color = (242,206,234)
@@ -102,7 +108,7 @@ class Board:
         if(overwrite):
             pos = self.board[row][col][1] - numOfBits
 
-        self.board[row][col] = (writtenByte, pos)
+        self.board[row][col] = (writtenByteFinal, pos)
 
 
 
@@ -116,18 +122,16 @@ class Board:
         row2 = int(y2 / self.squareSize)
         col2 = int(x2 / self.squareSize)
 
-        isValid = self.valid_move(row1, col1, row2, col2)
+        isValid = self.valid_move(row1, col1, row2, col2, positionFrom)
         if( isValid == None):
             return
 
         #prvo procita bitove sa pozicije sa koje se pomera i cuva ih u nizu
         bits = []
 
-        #brise sa pozicije sa koje se pomera
         numOfBits = self.board[row1][col1][1]
         for i in range(positionFrom, numOfBits):
-            #cita bitove sa pozicije
-            bits.append(self.readBit(row1, col1, i)) #obrisano +1
+            bits.append(self.readBit(row1, col1, i)) 
             
         #brisanje
         self.writeBits(row1, col1, [0 for _ in range(numOfBits)], numOfBits, True) #da li +1
@@ -145,7 +149,7 @@ class Board:
             #prikazi poruku i resetuj
 
         
-    def valid_move(self, row1, col1, row2, col2):
+    def valid_move(self, row1, col1, row2, col2, positionFrom):
         if(row1 == row2 or col1 == col2):
             return None
         if(row1 < 0 or row1 >= self.dim or col1 < 0 or col1 >= self.dim):
@@ -154,13 +158,32 @@ class Board:
             return None
         if(self.board[row1][col1][1] == 0):
             return None
-        if(self.board[row2][col2][1] == 0):
+        if(self.board[row2][col2][1] == 8):
             return None
 
        #provera sa user.color 
         if(self.currentPlayer == 1 and row1 % 2 != 0 or self.currentPlayer == 0 and row1 % 2 != 1):
             return None
+        
+        #dodati uslovi za valjanost poteza
+        #pozicija sa koje se pomera postoji
+        if(positionFrom < 0 or positionFrom >= self.board[row1][col1][1]):
+            return None
+        
+        #broj ukupnih bitova na novom steku je manji od 8
+        if(self.board[row2][col2][1] + self.board[row1][col1][1] - positionFrom > 8):
+            return None
+        
+        #bitovi se pomeraju na visu ili jednaku poziciju
+        if(positionFrom > self.board[row1][col1][1] - 1):
+            return None
 
+        #ovaj uslov izmeniti da se ipak dozvoljava prazno polje, 
+        # ali samo ukoliko su sva okolna prazna i 
+        # odabrano polje je u pravcu nekog postojeceg steka
+        if(self.board[row2][col2][1] == 0):
+            return None
+        
         diag = self.diagonal(row1, col1, row2, col2)
         if(diag == None):
             return None
@@ -179,9 +202,7 @@ class Board:
             return "DD"
 
     def updateScore(self, row, col):
-        #cita da li ima 8b, ako ima onda dodaje poen
         if(self.board[row][col][1] == 8):
-            #cita poslednji dodati bit i dodaje odgovarajucem
             resColor = self.readBit(row, col, 7)
             for u in self.users:
                 if(u.color == resColor):
