@@ -15,14 +15,6 @@ class Board:
         self.maxStacks = (self.dim-2 * self.dim)/16
         self.users = [User(0), User(1)] #sluzi samo za dodavanje poena
         
-        #self.stacks = [] #mozda ne
-
-        #self.n = len(self.stacks)
-        #moja ideja dict gde je br elemenata br mogucih stekova dakle dim-2 * dim  /2 /8
-        #znaci da element = koliko figurica, elemenata ima koliko stekova
-        #mozda nije dobro napisano ali mislim da je ideja jasna
-        #self.stacks = [bytes for _ in range((self.dim-2 * self.dim)/16)]
-
 
     def fillMatrix(self):
          for row in range(self.dim):
@@ -30,9 +22,9 @@ class Board:
                 if(row != 0 and row != self.dim - 1):
                     if(row%2 == 0 and col %2 == 0 or row%2 == 1 and col%2 == 1):
                         if(row %2 == 0):
-                            self.writeBit(row, col, 1, self.board[row][col][1])
+                            self.writeBits(row, col, [1], 1, False)
                         else:
-                            self.writeBit(row, col, 0, self.board[row][col][1])
+                            self.writeBits(row, col, [0], 1, False)
 
 
     def drawMatrix(self, screen):
@@ -81,30 +73,39 @@ class Board:
             return None
 
 
-    def writeBit(self, row, col, bit, positionTo): #dodati poziciju sa koje se pomera
-        pos = self.board[row][col][1]
+    def writeBits(self, row, col, bits, numOfBits, overwrite): #dodati poziciju sa koje se pomera
         
-        byte = self.board[row][col][0]
-
-        mask = 1 << pos
-        negatedMask = bitwise_not_bytes(bytes([mask]))
-        maskedByte = bitwise_and_bytes(byte, negatedMask)
-
-        if(bit == 1):
-            writtenByte = bitwise_or_bytes(maskedByte, bytes([1 << pos]))
-        else:            
-            writtenByte = bitwise_or_bytes(maskedByte, bytes([0 << pos]))
-
-        # u kom uslovu =
-        if(positionTo >= pos):
-            pos += 1
+        if(overwrite):
+            #upisuje od pos- numOfBits
+            pos = self.board[row][col][1] - numOfBits
         else:
-            pos -= 1
+            pos = self.board[row][col][1]
+        
+        i=0
+        for i in range(numOfBits):
+
+            
+            byte = self.board[row][col][0]
+
+            mask = 1 << pos
+            negatedMask = bitwise_not_bytes(bytes([mask]))
+            maskedByte = bitwise_and_bytes(byte, negatedMask)
+
+            writtenByte = bitwise_or_bytes(maskedByte, bytes([bits[i] << pos]))
+            
+            # if(overwrite):
+            #     pos -= 1
+            # else:
+            pos += 1
+
+        if(overwrite):
+            pos = self.board[row][col][1] - numOfBits
 
         self.board[row][col] = (writtenByte, pos)
 
 
-    def move(self, screen, movement, positionFrom):   
+
+    def move(self, screen, movement, positionFrom):  #obrisati screen 
         
         x1, y1 = self.get_field_start(movement[0], movement[1])
         x2, y2 = self.get_field_start(movement[2], movement[3])
@@ -118,35 +119,23 @@ class Board:
         if( isValid == None):
             return
 
-        if(self.board[row1][col1][1] == 1):
-            self.writeBit(row1, col1, 0, positionFrom)
-            pos = self.board[row1][col1][1]
-            self.board[row1][col1] = (self.board[row1][col1][0], pos)
-
-            self.writeBit(row2, col2, self.currentPlayer, self.board[row2][col2][1])
-
-            self.currentPlayer = 0 if self.currentPlayer == 1 else 1
-            return
-
-        #prvo procita bitove sa pozicije sa koje se pomera i cuvam ih u nizu
+        #prvo procita bitove sa pozicije sa koje se pomera i cuva ih u nizu
         bits = []
-        
+
         #brise sa pozicije sa koje se pomera
         numOfBits = self.board[row1][col1][1]
         for i in range(positionFrom, numOfBits):
+            #cita bitove sa pozicije
             bits.append(self.readBit(row1, col1, i)) #obrisano +1
-
-            self.writeBit(row1, col1, 0, i)
             
-            pos = self.board[row1][col1][1]
-            self.board[row1][col1] = (self.board[row1][col1][0], pos)
+        #brisanje
+        self.writeBits(row1, col1, [0 for _ in range(numOfBits)], numOfBits, True) #da li +1
 
-        #dodaje na poziciju na koju se pomera
-        j=0
-        for i in range(positionFrom, numOfBits):
-            self.writeBit(row2, col2, bits[j], numOfBits + i)
-            j+=1
-        
+        #upis
+        self.writeBits(row2, col2, bits, numOfBits, False)
+
+        self.currentPlayer = 0 if self.currentPlayer == 1 else 1
+
         #provera da li je gotova igra
         self.updateScore(row2, col2)
 
