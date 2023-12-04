@@ -81,9 +81,11 @@ class Board:
         else:
             pos = self.board[row][col][1]
         
+        #writtenByte ovde dekl
+        writtenByteFinal = bytes([0])
+
         i=0
         for i in range(numOfBits):
-
             
             byte = self.board[row][col][0]
 
@@ -92,10 +94,9 @@ class Board:
             maskedByte = bitwise_and_bytes(byte, negatedMask)
 
             writtenByte = bitwise_or_bytes(maskedByte, bytes([bits[i] << pos]))
-            
-            # if(overwrite):
-            #     pos -= 1
-            # else:
+            #brise se writtenbyte izmedju iteracija nesto tako
+            writtenByteFinal = bitwise_or_bytes(writtenByteFinal, writtenByte)
+
             pos += 1
 
         if(overwrite):
@@ -105,7 +106,7 @@ class Board:
 
 
 
-    def move(self, screen, movement, positionFrom):  #obrisati screen 
+    def move(self, movement, positionFrom):  #obrisati screen 
         
         x1, y1 = self.get_field_start(movement[0], movement[1])
         x2, y2 = self.get_field_start(movement[2], movement[3])
@@ -135,16 +136,11 @@ class Board:
         self.writeBits(row2, col2, bits, numOfBits, False)
 
         self.currentPlayer = 0 if self.currentPlayer == 1 else 1
-
-        #dodaje na poziciju na koju se pomera
-        j=0
-        for i in range(positionFrom, numOfBits):
-    
-            j+=1
         
-        #provera da li je gotova igra
+        #provera da li je neki stek popunjen
         self.updateScore(row2, col2)
 
+        #provera da li je gotova igra
         #if(self.isOver):
             #prikazi poruku i resetuj
 
