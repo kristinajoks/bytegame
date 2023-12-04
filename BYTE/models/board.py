@@ -136,6 +136,12 @@ class Board:
 
         self.currentPlayer = 0 if self.currentPlayer == 1 else 1
 
+        #dodaje na poziciju na koju se pomera
+        j=0
+        for i in range(positionFrom, numOfBits):
+    
+            j+=1
+        
         #provera da li je gotova igra
         self.updateScore(row2, col2)
 
