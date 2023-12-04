@@ -150,6 +150,9 @@ class Board:
         #provera da li je gotova igra
         self.updateScore(row2, col2)
 
+        #if(self.isOver):
+            #prikazi poruku i resetuj
+
         
     def valid_move(self, row1, col1, row2, col2):
         if(row1 == row2 or col1 == col2):
