@@ -7,13 +7,14 @@ class Dropdown:
         self.pos = pos
         self.rect = pygame.Rect(pos[0], pos[1], 120, 30)
         self.is_open = False
-        self.selected_option = None
+        self.selected_option = options[0]
+        self.text = self.options[0]
 
     def draw(self):
         pygame.draw.rect(self.screen, (200, 200, 200), self.rect)  # Crta okvir
         pygame.draw.line(self.screen, (0, 0, 0), (self.rect.x, self.rect.y), (self.rect.x + self.rect.width, self.rect.y), 2)  # Linija za oznaku
         font = pygame.font.Font(None, 24)
-        text = font.render("Select", True, (0, 0, 0))  # Tekst za trenutno odabrani element
+        text = font.render(self.text, True, (0, 0, 0))  # Tekst za trenutno odabrani element
         self.screen.blit(text, (self.rect.x + 10, self.rect.y + 5))
 
         if self.is_open:
@@ -34,7 +35,9 @@ class Dropdown:
                     )
                     if rect.collidepoint(event.pos):
                         self.selected_option = self.options[i]
+                        self.text = self.selected_option
                         self.is_open = False
+
                         return self.selected_option
         return None
 

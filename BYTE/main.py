@@ -58,6 +58,9 @@ while starting:
 
     pygame.display.flip()
 
+pygame.quit()
+
+pygame.init()
 movement = list(range(4))
 screenGame = pygame.display.set_mode((650,650))
 nameGame = pygame.display.set_caption("Byte Game")

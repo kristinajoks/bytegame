@@ -144,7 +144,7 @@ class Board:
         #dodaje na poziciju na koju se pomera
         j=0
         for i in range(positionFrom, numOfBits):
-            self.writeBit(row2, col2, bits[j], numOfBits + i)
+    
             j+=1
         
         #provera da li je gotova igra
