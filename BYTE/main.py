@@ -36,6 +36,7 @@ while starting:
                     starting = False
                     running = True 
 
+
         selected_white_black = white_black_dropdown.get_selected()
         selected_board_size = board_size_dropdown.get_selected()
 

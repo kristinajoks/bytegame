@@ -1,5 +1,6 @@
 import pygame
 from helpers.binary_helper import * 
+from models.user import User
 
 class Board:
     def __init__(self, dim, rectSize, rectStart):
@@ -11,6 +12,16 @@ class Board:
         self.rectStart = rectStart
         self.currentPlayer = 1
         self.fillMatrix()
+        self.maxStacks = (self.dim-2 * self.dim)/16
+        self.users = [User(0), User(1)] #sluzi samo za dodavanje poena
+        
+        #self.stacks = [] #mozda ne
+
+        #self.n = len(self.stacks)
+        #moja ideja dict gde je br elemenata br mogucih stekova dakle dim-2 * dim  /2 /8
+        #znaci da element = koliko figurica, elemenata ima koliko stekova
+        #mozda nije dobro napisano ali mislim da je ideja jasna
+        #self.stacks = [bytes for _ in range((self.dim-2 * self.dim)/16)]
 
 
     def fillMatrix(self):
@@ -40,14 +51,14 @@ class Board:
 
                     if(self.board[row][col][1]>0):
                         for (i) in range(self.board[row][col][1]):
-                            if(self.readBit(row, col, i+1)):
+                            if(self.readBit(row, col, i)): #obrisano +1
                                 bit_image = pygame.image.load('BYTE\\assets\\white.gif')
                             else:
                                 bit_image = pygame.image.load('BYTE\\assets\\black.gif') 
 
                             bit_image = pygame.transform.scale(bit_image, (self.squareSize/2, self.squareSize/2))    
                             pygame.Surface.blit(screen, bit_image, (rect[0] + self.squareSize / 4, rect[1] + self.squareSize / 2 + stack_offset))
-                            stack_offset -= 10 #bice druga vrednost
+                            stack_offset -= 10 
 
                 else:
                     color = (242,206,234)
@@ -61,9 +72,9 @@ class Board:
 
     def readBit(self, row, col, pos): #positionFrom
         # pos = self.board[row][col][1]
-        if pos > 0:
+        if pos >= 0:
             byte = self.board[row][col][0]
-            mask = 1 << (pos - 1)
+            mask = 1 << (pos)
             result = int.from_bytes(byte, byteorder="big") & mask
             return result > 0
         else:
@@ -123,7 +134,7 @@ class Board:
         #brise sa pozicije sa koje se pomera
         numOfBits = self.board[row1][col1][1]
         for i in range(positionFrom, numOfBits):
-            bits.append(self.readBit(row1, col1, i + 1))
+            bits.append(self.readBit(row1, col1, i)) #obrisano +1
 
             self.writeBit(row1, col1, 0, i)
             
@@ -135,7 +146,9 @@ class Board:
         for i in range(positionFrom, numOfBits):
             self.writeBit(row2, col2, bits[j], numOfBits + i)
             j+=1
-
+        
+        #provera da li je gotova igra
+        self.updateScore(row2, col2)
 
         
     def valid_move(self, row1, col1, row2, col2):
@@ -149,7 +162,8 @@ class Board:
             return None
         if(self.board[row2][col2][1] == 0):
             return None
-        
+
+       #provera sa user.color 
         if(self.currentPlayer == 1 and row1 % 2 != 0 or self.currentPlayer == 0 and row1 % 2 != 1):
             return None
 
@@ -170,6 +184,19 @@ class Board:
         elif(row2 == row1+1 and col2 == col1+1):
             return "DD"
 
+    def updateScore(self, row, col):
+        #cita da li ima 8b, ako ima onda dodaje poen
+        if(self.board[row][col][1] == 8):
+            #cita poslednji dodati bit i dodaje odgovarajucem
+            resColor = self.readBit(row, col, 7)
+            for u in self.users:
+                if(u.color == resColor):
+                    u.score += 1
+
+    def isOver(self):
+        if(self.users[self.currentPlayer].score >= self.maxStacks/2):
+            return True
+        return False
 
     def get_field_start(self, x, y):
         return [x-self.rectStart[0], y-self.rectStart[1]]
