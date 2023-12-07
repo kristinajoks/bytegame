@@ -69,7 +69,6 @@ class Board:
 
 
     def readBit(self, row, col, pos): #positionFrom
-        # pos = self.board[row][col][1]
         if pos >= 0:
             byte = self.board[row][col][0]
             mask = 1 << (pos)
@@ -82,33 +81,30 @@ class Board:
     def writeBits(self, row, col, bits, numOfBits, overwrite): #dodati poziciju sa koje se pomera
         
         if(overwrite):
-            #upisuje od pos- numOfBits
+            #upisuje od pos - numOfBits
             pos = self.board[row][col][1] - numOfBits
         else:
             pos = self.board[row][col][1]
         
-        #writtenByte ovde dekl
-        writtenByteFinal = bytes([0])
+        byte = self.board[row][col][0]
 
         i=0
         for i in range(numOfBits):
-            
-            byte = self.board[row][col][0]
 
             mask = 1 << pos
             negatedMask = bitwise_not_bytes(bytes([mask]))
             maskedByte = bitwise_and_bytes(byte, negatedMask)
 
             writtenByte = bitwise_or_bytes(maskedByte, bytes([bits[i] << pos]))
-            #brise se writtenbyte izmedju iteracija nesto tako
-            writtenByteFinal = bitwise_or_bytes(writtenByteFinal, writtenByte)
+
+            byte = writtenByte
 
             pos += 1
 
         if(overwrite):
             pos = self.board[row][col][1] - numOfBits
 
-        self.board[row][col] = (writtenByteFinal, pos)
+        self.board[row][col] = (byte, pos)
 
 
 
@@ -126,7 +122,7 @@ class Board:
         if( isValid == None):
             return
 
-        #prvo procita bitove sa pozicije sa koje se pomera i cuva ih u nizu
+        #citanje
         bits = []
 
         numOfBits = self.board[row1][col1][1]
