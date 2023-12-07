@@ -130,7 +130,7 @@ class Board:
             bits.append(self.readBit(row1, col1, i)) 
             
         #brisanje
-        self.writeBits(row1, col1, [0 for _ in range(numOfBits)], numOfBits, True) #da li +1
+        self.writeBits(row1, col1, [0 for _ in range(numOfBits)], numOfBits, True)
 
         #upis
         self.writeBits(row2, col2, bits, numOfBits, False)
