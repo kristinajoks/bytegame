@@ -10,6 +10,7 @@ class Board:
         self.bit = (dim-2)*dim/2
         self.byte = self.bit/8
         self.squareSize = rectSize / dim
+        self.bitHeight = 10;
         self.rectStart = rectStart
         self.currentPlayer = 1
         self.fillMatrix()
@@ -56,7 +57,7 @@ class Board:
                             outline_image = pygame.transform.scale(outline_image, (self.squareSize/2, self.squareSize/2))
                             pygame.Surface.blit(screen, outline_image, (rect[0] + self.squareSize / 4, rect[1] + self.squareSize / 2 + stack_offset))
                             
-                            stack_offset -= 10 
+                            stack_offset -= self.bitHeight; 
 
 
                 else:
@@ -118,6 +119,7 @@ class Board:
         col1 = int(x1 / self.squareSize)
         row2 = int(y2 / self.squareSize)
         col2 = int(x2 / self.squareSize)
+
 
         isValid = self.valid_move(row1, col1, row2, col2, positionFrom)
         if( isValid == None):
@@ -195,6 +197,7 @@ class Board:
 
     #Realizovati funkcije koje proveravaju da li su susedna polja prazna
     def areDiagonalEmpty(self, row, col):
+        #samo za proveru su stampanja
         ll = self.board[row-1][col-1][1]
         lr = self.board[row-1][col+1][1]
         ul = self.board[row+1][col-1][1]
