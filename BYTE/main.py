@@ -65,6 +65,7 @@ movement = list(range(4))
 screenGame = pygame.display.set_mode((650,650))
 nameGame = pygame.display.set_caption("Byte Game")
 
+
 while running:
     background = screenGame.fill((245, 243, 240))
     board.drawMatrix(screenGame)

@@ -125,6 +125,8 @@ class Board:
         if( isValid == None):
             return
 
+
+
         #citanje
         bits = []
 
@@ -203,10 +205,10 @@ class Board:
         ul = self.board[row+1][col-1][1]
         ur = self.board[row+1][col+1][1]
 
-        print(ll == 0)
-        print(lr == 0)
-        print(ul == 0)
-        print(ur == 0)
+        # print(ll == 0)
+        # print(lr == 0)
+        # print(ul == 0)
+        # print(ur == 0)
 
 
         if(self.board[row-1][col-1][1] == 0 and self.board[row-1][col+1][1] == 0 
@@ -264,7 +266,6 @@ class Board:
                     queue.append((new_row, new_col))
 
         return None, None
-
 
     def updateScore(self, row, col):
         if(self.board[row][col][1] == 8):
