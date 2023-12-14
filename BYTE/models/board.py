@@ -1,3 +1,4 @@
+from collections import deque
 import pygame
 from helpers.binary_helper import * 
 from models.user import User
@@ -108,7 +109,7 @@ class Board:
 
 
 
-    def move(self, movement, positionFrom):  #obrisati screen 
+    def move(self, movement, positionFrom): 
         
         x1, y1 = self.get_field_start(movement[0], movement[1])
         x2, y2 = self.get_field_start(movement[2], movement[3])
@@ -162,17 +163,11 @@ class Board:
             return None
         
         #dodati uslovi za valjanost poteza
-        #pozicija sa koje se pomera postoji
+        #pozicija sa koje se pomera je u rangu
         if(positionFrom < 0 or positionFrom >= self.board[row1][col1][1]):
             return None
         
-        #broj ukupnih bitova na novom steku je manji od 8
-        if(self.board[row2][col2][1] + self.board[row1][col1][1] - positionFrom > 8):
-            return None
-        
-        #bitovi se pomeraju na visu ili jednaku poziciju
-        if(positionFrom > self.board[row1][col1][1] - 1):
-            return None
+        self.stackRules(row1, col1, row2, col2, positionFrom)
 
         #ovaj uslov izmeniti da se ipak dozvoljava prazno polje, 
         # ali samo ukoliko su sva okolna prazna i 
@@ -197,6 +192,77 @@ class Board:
         elif(row2 == row1+1 and col2 == col1+1):
             return "DD"
 
+
+    #Realizovati funkcije koje proveravaju da li su susedna polja prazna
+    def areDiagonalEmpty(self, row, col):
+        ll = self.board[row-1][col-1][1]
+        lr = self.board[row-1][col+1][1]
+        ul = self.board[row+1][col-1][1]
+        ur = self.board[row+1][col+1][1]
+
+        print(ll == 0)
+        print(lr == 0)
+        print(ul == 0)
+        print(ur == 0)
+
+
+        if(self.board[row-1][col-1][1] == 0 and self.board[row-1][col+1][1] == 0 
+           and self.board[row+1][col-1][1] == 0 and self.board[row+1][col+1][1] == 0):
+            return True
+        return False
+
+
+    #-Realizovati funkcije koje na osnovu konkretnog poteza i stanje igre proveravaju 
+    #da li se potez može odigrati prema pravilima pomeranja definisanim za stekove
+    def stackRules(self, row1, col1, row2, col2, positionFrom):
+        #broj ukupnih bitova na novom steku je manji od 8
+        if(self.board[row2][col2][1] + self.board[row1][col1][1] - positionFrom > 8):
+            return None
+        
+        #bitovi se pomeraju na visu ili jednaku poziciju
+        if(positionFrom > self.board[row1][col1][1] - 1):
+            return None
+        
+        if(self.areDiagonalEmpty(row1, col1)):
+            #naci najblizi stek i proveriti da li je u pravcu
+            #ako jeste, onda je dozvoljeno
+
+            nzrow, nzcol = self.find_nearest_nonzero(row1, col1)
+            print(nzrow, nzcol)
+
+
+    def find_nearest_nonzero(self, start_row, start_col):
+        #DL, DD, GL, GD
+        directions = [(-1, -1), (-1, 1), (1, -1), (1, 1)]
+
+        visited = [[False for _ in range(len(self.board[0]))] for _ in range(len(self.board))]
+
+        # queue = deque([(start_row, start_col)])
+        queue = deque([(start_row + dr, start_col + dc) for dr, dc in directions])
+
+
+        while queue:
+            current_row, current_col = queue.popleft()
+            visited[current_row][current_col] = True
+
+            #opet ovaj uslov vec postoji
+            if self.board[current_row][current_col][1] != 0:
+                print(self.board[current_row][current_col])
+                return current_row, current_col
+
+            #iterativno obilazi susede, jer python nekad brzo ogranicava rekurziju
+            for dr, dc in directions:
+                new_row, new_col = current_row + dr, current_col + dc
+
+                #u granicama matrice i nije posecen, ali mozda mogu i da se izbace uslovi za granicu
+                if (new_row != start_row and new_col != start_col and 
+                    0 <= new_row < len(self.board) and 0 <= new_col < len(self.board[0]) 
+                    and not visited[new_row][new_col]):
+                    queue.append((new_row, new_col))
+
+        return None, None
+
+
     def updateScore(self, row, col):
         if(self.board[row][col][1] == 8):
             resColor = self.readBit(row, col, 7)
@@ -204,10 +270,12 @@ class Board:
                 if(u.color == resColor):
                     u.score += 1
 
+
     def isOver(self):
         if(self.users[self.currentPlayer].score >= self.maxStacks/2):
             return True
         return False
+
 
     def get_field_start(self, x, y):
         return [x-self.rectStart[0], y-self.rectStart[1]]
