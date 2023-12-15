@@ -161,7 +161,8 @@ class Board:
             return None
         if(self.board[row2][col2][1] == 8):
             return None
-
+        # if(self.board[row1][col1][1] + self.board[row2][col2][1] < 8):
+        #     return None
        #provera sa user.color 
         if(self.currentPlayer == 1 and row1 % 2 != 0 or self.currentPlayer == 0 and row1 % 2 != 1):
             return None
@@ -225,47 +226,61 @@ class Board:
             return None
         
         #bitovi se pomeraju na visu ili jednaku poziciju
-        if(positionFrom > self.board[row1][col1][1] - 1):
+        #s tim sto to ne vazi kad su sva polja okolo prazna
+        if(positionFrom >= self.board[row1][col1][1] - 1):
             return None
         
-        if(self.areDiagonalEmpty(row1, col1)):
-            #naci najblizi stek i proveriti da li je u pravcu
-            #ako jeste, onda je dozvoljeno
+        # if(self.areDiagonalEmpty(row1, col1)):
+        #     #naci najblizi stek i proveriti da li je u pravcu
+        #     #ako jeste, onda je dozvoljeno
 
-            nzrow, nzcol = self.find_nearest_nonzero(row1, col1)
-            print(nzrow, nzcol)
-
-
-    def find_nearest_nonzero(self, start_row, start_col):
-        #DL, DD, GL, GD
-        directions = [(-1, -1), (-1, 1), (1, -1), (1, 1)]
-
-        visited = [[False for _ in range(len(self.board[0]))] for _ in range(len(self.board))]
-
-        # queue = deque([(start_row, start_col)])
-        queue = deque([(start_row + dr, start_col + dc) for dr, dc in directions])
+        #     nzrow, nzcol = self.find_nearest_nonzero(row1, col1)
+        #     print(nzrow, nzcol)
 
 
-        while queue:
-            current_row, current_col = queue.popleft()
-            visited[current_row][current_col] = True
+        def find_nearest_nonzero(self, start_row, start_col):
+        # DL, DD, GL, GD
+            directions = [(-1, -1), (-1, 1), (1, -1), (1, 1)]
+            path = []
+            dict = {}
+            distance = 0
+            visited = [[False for _ in range(len(self.board[0]))] for _ in range(len(self.board))]
 
-            #opet ovaj uslov vec postoji
-            if self.board[current_row][current_col][1] != 0:
-                print(self.board[current_row][current_col])
-                return current_row, current_col
+            stack = [(start_row + dr, start_col + dc) for dr, dc in directions]
 
-            #iterativno obilazi susede, jer python nekad brzo ogranicava rekurziju
-            for dr, dc in directions:
-                new_row, new_col = current_row + dr, current_col + dc
+            while stack:
+                current_row, current_col = stack.pop()
+                visited[current_row][current_col] = True
+                distance += 1
 
-                #u granicama matrice i nije posecen, ali mozda mogu i da se izbace uslovi za granicu
-                if (new_row != start_row and new_col != start_col and 
-                    0 <= new_row < len(self.board) and 0 <= new_col < len(self.board[0]) 
-                    and not visited[new_row][new_col]):
-                    queue.append((new_row, new_col))
+                # opet ovaj uslov vec postoji
+                if self.board[current_row][current_col][1] == 0:
+                    path.append((current_row,current_col))
+                else:
+                    if path and path[0] not in dict:  
+                        dict[path[0]] = distance
+                    path.clear()
+                    distance = 0
 
-        return None, None
+                # iterativno obilazi susede, jer python nekad brzo ogranicava rekurziju
+                for dr, dc in directions:
+                    new_row, new_col = current_row + dr, current_col + dc
+
+                    # u granicama matrice i nije posecen, ali mozda mogu i da se izbace uslovi za granicu
+                    if (
+                        new_row != start_row
+                        and new_col != start_col
+                        and 0 <= new_row < len(self.board)
+                        and 0 <= new_col < len(self.board[0])
+                        and not visited[new_row][new_col]
+                    ):
+                        stack.append((new_row, new_col))
+                if dict:
+                    min_key = min(dict, key=dict.get)
+                    return min_key
+                
+        return (None, None)
+
 
     def updateScore(self, row, col):
         if(self.board[row][col][1] == 8):
