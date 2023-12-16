@@ -65,6 +65,9 @@ movement = list(range(4))
 screenGame = pygame.display.set_mode((650,650))
 nameGame = pygame.display.set_caption("Byte Game")
 
+gameOver = False
+pygame.font.init()
+font = pygame.font.Font(None, 36)
 
 while running:
     background = screenGame.fill((245, 243, 240))
@@ -77,9 +80,13 @@ while running:
             movement[0], movement[1] = pygame.mouse.get_pos()
         if event.type == pygame.MOUSEBUTTONUP:
             movement[2], movement[3] = pygame.mouse.get_pos()
-            board.move(movement)
+            gameOver = board.move(movement)
 
     board.drawMatrix(screenGame)
+
+    if gameOver:
+        game_over_text = font.render("Game Over!", True, (0, 0, 0))
+        screenGame.blit(game_over_text, (250, 20))
 
     pygame.display.flip()
    
