@@ -169,11 +169,6 @@ class Board:
             return None
         if(self.board[row2][col2][1] == 8):
             return None
-        # if(self.board[row1][col1][1] + self.board[row2][col2][1] < 8):
-        #     return None
-       #provera sa user.color 
-        # if(self.currentPlayer == 1 and row1 % 2 != 0 or self.currentPlayer == 0 and row1 % 2 != 1):
-        #     return None
         if(self.currentPlayer == 1 and bit == 0 or self.currentPlayer == 0 and bit == 1):
             return None
         
@@ -186,8 +181,8 @@ class Board:
             return None
 
         # ne znam
-        if self.board[row2][col2][1] == 0:
-            return None
+        # if self.board[row2][col2][1] == 0:
+        #     return None
 
         # Provera da li je potez dijagonalan
         diag = self.diagonal(row1, col1, row2, col2)
