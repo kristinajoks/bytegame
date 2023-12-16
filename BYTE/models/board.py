@@ -153,6 +153,7 @@ class Board:
         #provera da li je neki stek popunjen
         self.updateScore(row2, col2)
 
+        print(self.calculate_all_possible_moves())
         #provera da li je gotova igra
         #if(self.isOver):
             #prikazi poruku i resetuj
@@ -259,6 +260,7 @@ class Board:
                 #naci najblizi stek i proveriti da li je u pravcu
                 #ako jeste, onda je dozvoljeno
                 (nzrow, nzcol)= self.find_nearest_nonzero(row1, col1)
+                print(nzrow,nzcol)
                 if nzrow is not None and self.is_in_direction(row1, col1, nzrow, nzcol, (row2, col2)):
                     return True
                 
@@ -307,3 +309,18 @@ class Board:
 
     def get_field_start(self, x, y):
         return [x-self.rectStart[0], y-self.rectStart[1]]
+    
+    def calculate_all_possible_moves(self):
+        possible_moves = []
+        for row in range(self.dim):
+            for col in range(self.dim):
+                # proverava da li stek pripada trenutnom igracu
+                if self.board[row][col][1] > 0 and self.readBit(row, col, 0) == self.currentPlayer:
+                    # dijagonalni susedi
+                    for dr, dc in [(-1, -1), (-1, 1), (1, -1), (1, 1)]:
+                        new_row, new_col = row + dr, col + dc
+                        
+                        if 0 <= new_row < self.dim and 0 <= new_col < self.dim:
+                            if self.valid_move(row, col, new_row, new_col, 0, self.currentPlayer):
+                                possible_moves.append((row, col, new_row, new_col))
+        return possible_moves
