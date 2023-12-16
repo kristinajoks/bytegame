@@ -120,7 +120,6 @@ class Board:
         row2 = int(y2 / self.squareSize)
         col2 = int(x2 / self.squareSize)
 
-        ########
         clicked_bit = int(((row1 + 1) * self.squareSize) - y1 ) / self.bitHeight
 
         positionFrom = 0
@@ -154,10 +153,10 @@ class Board:
         self.updateScore(row2, col2)
 
         print(self.calculate_all_possible_moves())
-        #provera da li je gotova igra
-        #if(self.isOver):
-            #prikazi poruku i resetuj
 
+        #provera da li je gotova igra
+        if(self.isOver):
+            return True
         
     def valid_move(self, row1, col1, row2, col2, positionFrom, bit):
         if(row1 == row2 or col1 == col2):
@@ -180,10 +179,6 @@ class Board:
         
         if not self.stackRules(row1, col1, row2, col2, positionFrom): #?
             return None
-
-        # ne znam
-        # if self.board[row2][col2][1] == 0:
-        #     return None
 
         # Provera da li je potez dijagonalan
         diag = self.diagonal(row1, col1, row2, col2)
@@ -211,9 +206,8 @@ class Board:
         return cross_product == 0
     
 
-    #Realizovati funkcije koje proveravaju da li su susedna polja prazna
-    #nije radila dobro za delove koji izlaze van granica matrice
     def areDiagonalEmpty(self, row, col):
+        # Provera donje leve dijagonale
         ll = 0
         if (row - 1 >= 0 and col - 1 >= 0 and row - 1 < len(self.board) and col - 1 < len(self.board[0])):
             ll = self.board[row - 1][col - 1][1]
@@ -239,23 +233,17 @@ class Board:
         
         return False
 
-
-    #-Realizovati funkcije koje na osnovu konkretnog poteza i stanje igre proveravaju 
-    #da li se potez može odigrati prema pravilima pomeranja definisanim za stekove
     def stackRules(self, row1, col1, row2, col2, positionFrom):
         #broj ukupnih bitova na novom steku je manji od 8
         if(self.board[row2][col2][1] + self.board[row1][col1][1] - positionFrom > 8):
             return False
 
         #bitovi se pomeraju na visu ili jednaku poziciju
-        #s tim sto to ne vazi kad su sva polja okolo prazna //odradjeno 
+        #to ne vazi kad su sva polja okolo prazna 
         if(positionFrom > self.board[row2][col2][1]):
             return False
 
         if(positionFrom == self.board[row2][col2][1]): 
-            #treba da mi ne da da pomerim na manje bez obzira na okolna polja, a smem na isto samo ako su sva prazna i ono je
-            #u pravcu najblizeg steka
-        
             if(self.areDiagonalEmpty(row1, col1)):
                 #naci najblizi stek i proveriti da li je u pravcu
                 #ako jeste, onda je dozvoljeno
@@ -264,7 +252,7 @@ class Board:
                 if nzrow is not None and self.is_in_direction(row1, col1, nzrow, nzcol, (row2, col2)):
                     return True
                 
-                return False #########
+                return False 
         
         return True
 
