@@ -110,7 +110,7 @@ class Board:
 
 
 
-    def move(self, movement, positionFrom): 
+    def move(self, movement): 
         
         x1, y1 = self.get_field_start(movement[0], movement[1])
         x2, y2 = self.get_field_start(movement[2], movement[3])
@@ -120,19 +120,27 @@ class Board:
         row2 = int(y2 / self.squareSize)
         col2 = int(x2 / self.squareSize)
 
+        ########
+        clicked_bit = int(((row1 + 1) * self.squareSize) - y1 ) / self.bitHeight
 
-        isValid = self.valid_move(row1, col1, row2, col2, positionFrom)
-        if( isValid == None):
-            return
-
-
+        positionFrom = 0
+        if(clicked_bit < 0):
+            return None
+        if(clicked_bit > self.board[row1][col1][1]):
+            positionFrom = self.board[row1][col1][1] - 1
+        else:
+            positionFrom = int(clicked_bit)
 
         #citanje
         bits = []
 
-        numOfBits = self.board[row1][col1][1]
-        for i in range(positionFrom, numOfBits):
-            bits.append(self.readBit(row1, col1, i)) 
+        numOfBits = self.board[row1][col1][1] - positionFrom
+        for i in range(numOfBits):
+            bits.append(self.readBit(row1, col1, positionFrom + i))
+
+        isValid = self.valid_move(row1, col1, row2, col2, positionFrom, bits[0])
+        if( isValid == None):
+            return
             
         #brisanje
         self.writeBits(row1, col1, [0 for _ in range(numOfBits)], numOfBits, True)
@@ -150,7 +158,7 @@ class Board:
             #prikazi poruku i resetuj
 
         
-    def valid_move(self, row1, col1, row2, col2, positionFrom):
+    def valid_move(self, row1, col1, row2, col2, positionFrom, bit):
         if(row1 == row2 or col1 == col2):
             return None
         if(row1 < 0 or row1 >= self.dim or col1 < 0 or col1 >= self.dim):
@@ -164,7 +172,9 @@ class Board:
         # if(self.board[row1][col1][1] + self.board[row2][col2][1] < 8):
         #     return None
        #provera sa user.color 
-        if(self.currentPlayer == 1 and row1 % 2 != 0 or self.currentPlayer == 0 and row1 % 2 != 1):
+        # if(self.currentPlayer == 1 and row1 % 2 != 0 or self.currentPlayer == 0 and row1 % 2 != 1):
+        #     return None
+        if(self.currentPlayer == 1 and bit == 0 or self.currentPlayer == 0 and bit == 1):
             return None
         
         #dodati uslovi za valjanost poteza
@@ -172,8 +182,8 @@ class Board:
         if(positionFrom < 0 or positionFrom >= self.board[row1][col1][1]):
             return None
         
-        self.stackRules(row1, col1, row2, col2, positionFrom):
-    
+        if not self.stackRules(row1, col1, row2, col2, positionFrom): #?
+            return None
 
         # ne znam
         if self.board[row2][col2][1] == 0:
@@ -243,7 +253,12 @@ class Board:
 
         #bitovi se pomeraju na visu ili jednaku poziciju
         #s tim sto to ne vazi kad su sva polja okolo prazna //odradjeno 
-        if(positionFrom >= self.board[row1][col1][1] - 1):
+        if(positionFrom > self.board[row2][col2][1]):
+            return False
+
+        if(positionFrom == self.board[row2][col2][1]): 
+            #treba da mi ne da da pomerim na manje bez obzira na okolna polja, a smem na isto samo ako su sva prazna i ono je
+            #u pravcu najblizeg steka
         
             if(self.areDiagonalEmpty(row1, col1)):
                 #naci najblizi stek i proveriti da li je u pravcu
@@ -251,7 +266,8 @@ class Board:
                 (nzrow, nzcol)= self.find_nearest_nonzero(row1, col1)
                 if nzrow is not None and self.is_in_direction(row1, col1, nzrow, nzcol, (row2, col2)):
                     return True
-            return False
+                
+                return False #########
         
         return True
 
