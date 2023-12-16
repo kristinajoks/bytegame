@@ -154,7 +154,7 @@ class Board:
         if(row1 == row2 or col1 == col2):
             return None
         if(row1 < 0 or row1 >= self.dim or col1 < 0 or col1 >= self.dim):
-            return None
+            return None 
         if(row2 < 0 or row2 >= self.dim or col2 < 0 or col2 >= self.dim):
             return None
         if(self.board[row1][col1][1] == 0):
@@ -172,19 +172,16 @@ class Board:
         if(positionFrom < 0 or positionFrom >= self.board[row1][col1][1]):
             return None
         
-        self.stackRules(row1, col1, row2, col2, positionFrom)
+        self.stackRules(row1, col1, row2, col2, positionFrom):
+    
 
-        #ovaj uslov izmeniti da se ipak dozvoljava prazno polje, 
-        # ali samo ukoliko su sva okolna prazna i 
-        # odabrano polje je u pravcu nekog postojeceg steka
-        if(self.board[row2][col2][1] == 0):
+        # ne znam
+        if self.board[row2][col2][1] == 0:
             return None
-        
+
+        # Provera da li je potez dijagonalan
         diag = self.diagonal(row1, col1, row2, col2)
-        if(diag == None):
-            return None
-        else:
-            return diag
+        return diag if diag is not None else None
 
         
     def diagonal(self, row1, col1, row2, col2):
@@ -197,24 +194,43 @@ class Board:
         elif(row2 == row1+1 and col2 == col1+1):
             return "DD"
 
+    def is_in_direction(self, start_row, start_col, target_row, target_col, stack_pos):
+        # vektori
+        direction_to_target = (target_row - start_row, target_col - start_col)
+        direction_to_stack = (stack_pos[0] - start_row, stack_pos[1] - start_col)
+
+        # da li su u istom pravcu
+        cross_product = direction_to_target[0] * direction_to_stack[1] - direction_to_target[1] * direction_to_stack[0]
+
+        return cross_product == 0
+    
 
     #Realizovati funkcije koje proveravaju da li su susedna polja prazna
+    #nije radila dobro za delove koji izlaze van granica matrice
     def areDiagonalEmpty(self, row, col):
-        #samo za proveru su stampanja
-        ll = self.board[row-1][col-1][1]
-        lr = self.board[row-1][col+1][1]
-        ul = self.board[row+1][col-1][1]
-        ur = self.board[row+1][col+1][1]
+        ll = 0
+        if (row - 1 >= 0 and col - 1 >= 0 and row - 1 < len(self.board) and col - 1 < len(self.board[0])):
+            ll = self.board[row - 1][col - 1][1]
 
-        # print(ll == 0)
-        # print(lr == 0)
-        # print(ul == 0)
-        # print(ur == 0)
+        # Provera donje desne dijagonale
+        lr = 0
+        if (row - 1 >= 0 and col + 1 >= 0 and row - 1 < len(self.board) and col + 1 < len(self.board[0])):
+            lr = self.board[row - 1][col + 1][1]
 
+        # Provera gornje leve dijagonale
+        ul = 0
+        if (row + 1 >= 0 and col - 1 >= 0 and row + 1 < len(self.board) and col - 1 < len(self.board[0])):
+            ul = self.board[row + 1][col - 1][1]
 
-        if(self.board[row-1][col-1][1] == 0 and self.board[row-1][col+1][1] == 0 
-           and self.board[row+1][col-1][1] == 0 and self.board[row+1][col+1][1] == 0):
+        # Provera gornje desne dijagonale
+        ur = 0
+        if (row + 1 >= 0 and col + 1 >= 0 and row + 1 < len(self.board) and col + 1 < len(self.board[0])):
+            ur = self.board[row + 1][col + 1][1]
+
+        # Provera da li su sva dijagonalna polja prazna
+        if ll == 0 and lr == 0 and ul == 0 and ur == 0:
             return True
+        
         return False
 
 
@@ -223,62 +239,44 @@ class Board:
     def stackRules(self, row1, col1, row2, col2, positionFrom):
         #broj ukupnih bitova na novom steku je manji od 8
         if(self.board[row2][col2][1] + self.board[row1][col1][1] - positionFrom > 8):
-            return None
-        
+            return False
+
         #bitovi se pomeraju na visu ili jednaku poziciju
-        #s tim sto to ne vazi kad su sva polja okolo prazna
+        #s tim sto to ne vazi kad su sva polja okolo prazna //odradjeno 
         if(positionFrom >= self.board[row1][col1][1] - 1):
-            return None
         
-        # if(self.areDiagonalEmpty(row1, col1)):
-        #     #naci najblizi stek i proveriti da li je u pravcu
-        #     #ako jeste, onda je dozvoljeno
+            if(self.areDiagonalEmpty(row1, col1)):
+                #naci najblizi stek i proveriti da li je u pravcu
+                #ako jeste, onda je dozvoljeno
+                (nzrow, nzcol)= self.find_nearest_nonzero(row1, col1)
+                if nzrow is not None and self.is_in_direction(row1, col1, nzrow, nzcol, (row2, col2)):
+                    return True
+            return False
+        
+        return True
 
-        #     nzrow, nzcol = self.find_nearest_nonzero(row1, col1)
-        #     print(nzrow, nzcol)
 
+    def find_nearest_nonzero(self, start_row, start_col):
+        directions = [(-1, -1), (-1, 1), (1, -1), (1, 1)]
+        visited = [[False for _ in range(self.dim)] for _ in range(self.dim)]
+        queue = deque([(start_row + dr, start_col + dc)
+                        for dr, dc in directions
+                        if 0 < start_row + dr < len(self.board) and 0 < start_col + dc < len(self.board[0])
+                        ])
 
-        def find_nearest_nonzero(self, start_row, start_col):
-        # DL, DD, GL, GD
-            directions = [(-1, -1), (-1, 1), (1, -1), (1, 1)]
-            path = []
-            dict = {}
-            distance = 0
-            visited = [[False for _ in range(len(self.board[0]))] for _ in range(len(self.board))]
+        while queue:
+            current_row, current_col= queue.popleft()
+            visited[current_row][current_col] = True
 
-            stack = [(start_row + dr, start_col + dc) for dr, dc in directions]
+            if self.board[current_row][current_col][1] > 0 and current_col != start_col or current_row != start_row:
+                return (current_row, current_col)
 
-            while stack:
-                current_row, current_col = stack.pop()
-                visited[current_row][current_col] = True
-                distance += 1
+            for dr, dc in directions:
+                new_row, new_col = current_row + dr, current_col + dc
+                if (0 <= new_row < self.dim and 0 <= new_col < self.dim and not visited[new_row][new_col]
+                    and (new_row != start_row or new_col != start_col)):
+                    queue.append((new_row, new_col))
 
-                # opet ovaj uslov vec postoji
-                if self.board[current_row][current_col][1] == 0:
-                    path.append((current_row,current_col))
-                else:
-                    if path and path[0] not in dict:  
-                        dict[path[0]] = distance
-                    path.clear()
-                    distance = 0
-
-                # iterativno obilazi susede, jer python nekad brzo ogranicava rekurziju
-                for dr, dc in directions:
-                    new_row, new_col = current_row + dr, current_col + dc
-
-                    # u granicama matrice i nije posecen, ali mozda mogu i da se izbace uslovi za granicu
-                    if (
-                        new_row != start_row
-                        and new_col != start_col
-                        and 0 <= new_row < len(self.board)
-                        and 0 <= new_col < len(self.board[0])
-                        and not visited[new_row][new_col]
-                    ):
-                        stack.append((new_row, new_col))
-                if dict:
-                    min_key = min(dict, key=dict.get)
-                    return min_key
-                
         return (None, None)
 
 
