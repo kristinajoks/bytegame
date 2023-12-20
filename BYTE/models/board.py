@@ -152,7 +152,7 @@ class Board:
         #provera da li je neki stek popunjen
         self.updateScore(row2, col2)
 
-        print(self.calculate_all_possible_moves())
+        #print(self.calculate_all_possible_moves())
 
         #provera da li je gotova igra
         if(self.isOver):
@@ -234,6 +234,7 @@ class Board:
         return False
 
     def stackRules(self, row1, col1, row2, col2, positionFrom):
+        lista = list()
         #broj ukupnih bitova na novom steku je manji od 8
         if(self.board[row2][col2][1] + self.board[row1][col1][1] - positionFrom > 8):
             return False
@@ -247,10 +248,10 @@ class Board:
             if(self.areDiagonalEmpty(row1, col1)):
                 #naci najblizi stek i proveriti da li je u pravcu
                 #ako jeste, onda je dozvoljeno
-                (nzrow, nzcol)= self.find_nearest_nonzero(row1, col1)
-                print(nzrow,nzcol)
-                if nzrow is not None and self.is_in_direction(row1, col1, nzrow, nzcol, (row2, col2)):
-                    return True
+                lista.append(self.find_nearest_nonzero(row1, col1))
+                print(lista)
+                # if nzrow is not None and self.is_in_direction(row1, col1, nzrow, nzcol, (row2, col2)):
+                #     return True
                 
                 return False 
         
@@ -265,22 +266,84 @@ class Board:
                         if 0 < start_row + dr < len(self.board) and 0 < start_col + dc < len(self.board[0])
                         ])
 
+        lista = list(queue)
+        lista2 = list()
+        allowed_list = list()
+        my_dict = {(start_row, start_col): lista}
+        counter = 0
         while queue:
-            current_row, current_col= queue.popleft()
-            visited[current_row][current_col] = True
 
-            if self.board[current_row][current_col][1] > 0 and current_col != start_col or current_row != start_row:
-                return (current_row, current_col)
+            if len(lista) == 0:
+                if len(my_dict) > 1:
+                    return allowed_list
+                    break
+                else: #naredna distanca, da znam zbog vracanja unazad
+                    for _ in range(counter):
+                        if queue:
+                            lista.append(queue.popleft())
+                        else:
+                            break
+            else:
+                current_row, current_col= queue.popleft()
+                lista2.clear()
+                lista.remove((current_row,current_col))
+                visited[current_row][current_col] = True
+                
+               
+                for dr, dc in directions:
+                    new_row, new_col = current_row + dr, current_col + dc
+                    distance = self.calculate_distance(start_row, new_row, start_col, new_col)
+                    #value
+                    lista2.append((new_row,new_col))
+                    my_dict = {(current_row, current_col): lista2}
 
-            for dr, dc in directions:
-                new_row, new_col = current_row + dr, current_col + dc
-                if (0 <= new_row < self.dim and 0 <= new_col < self.dim and not visited[new_row][new_col]
-                    and (new_row != start_row or new_col != start_col)):
-                    queue.append((new_row, new_col))
+                    
+                    if self.board[new_row][new_col][1] > 0:
+                        if(distance == 2):
+                            allowed_list.append((current_row, current_col))
+                        else:
+                            allowed_list.append(self.return_position((new_row, new_col), (start_row, start_col), my_dict))
 
-        return (None, None)
+                    if (0 <= new_row < self.dim and 0 <= new_col < self.dim and not visited[new_row][new_col]
+                        and (new_row != start_row or new_col != start_col)):
+                        queue.append((new_row, new_col))
 
+                    counter += 1
+        return allowed_list
 
+    def return_position(start, target, my_dict):
+        visited = set()
+        queue = [(start, [start])]
+
+        while queue:
+            current, path = queue.pop(0)
+            if current == target:
+                #da li je startna pozicija u putanji
+                if start in path:
+                    # prva pre ciljne
+                    for i in range(len(path) - 1, 0, -1):
+                        if path[i] == target and i > 1:  # element pre ciljne
+                            return path[i - 1]
+                else:
+                    
+                    return path
+            
+            if current not in visited:
+                visited.add(current)
+                for key, (neighbors, _) in my_dict.items():
+                    if current in neighbors:
+                        queue.append((key, path + [key]))
+
+        return None
+
+    def calculate_distance(self, start_row, current_row, start_col, current_col):
+        if(start_row == current_row): 
+            return abs(start_col - current_col)
+        
+        return abs(start_row - current_row)
+        
+        
+    
     def updateScore(self, row, col):
         if(self.board[row][col][1] == 8):
             resColor = self.readBit(row, col, 7)
