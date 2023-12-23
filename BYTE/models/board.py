@@ -137,9 +137,15 @@ class Board:
         for i in range(numOfBits):
             bits.append(self.readBit(row1, col1, positionFrom + i))
 
-        isValid = self.valid_move(row1, col1, row2, col2, positionFrom, bits[0])
-        if( isValid == None):
-            return
+        # isValid = self.valid_move(row1, col1, row2, col2, positionFrom, bits[0])
+        # if( isValid == None):
+        #     return
+            
+        validMoves = self.calculate_all_possible_moves()
+        print(validMoves)
+
+        if((row1, col1, row2, col2) not in validMoves):
+            return None
             
         #brisanje
         self.writeBits(row1, col1, [0 for _ in range(numOfBits)], numOfBits, True)
@@ -249,6 +255,8 @@ class Board:
                 #naci najblizi stek i proveriti da li je u pravcu
                 #ako jeste, onda je dozvoljeno
                 lista.append(self.find_nearest_nonzero(row1, col1))
+                lista = list(set(lista))
+
                 print(lista) #ovde sada vraca listu dozvoljenog kretanja za bit koji sam pomerila!!!
                 #treba prvo da se vidi da li je neki bit bolji za pomeranje pa da se zove za njega
                 #fja dozvoljenih svih poteza ->ona moja da se proveri
@@ -278,6 +286,7 @@ class Board:
 
             if len(lista) == 0:
                 if len(my_dict) >= 1:
+                    allowed_list = [x for x in allowed_list if x is not None]
                     return allowed_list
                     break
                 else: #naredna distanca, da znam zbog vracanja unazad
@@ -315,9 +324,6 @@ class Board:
         return allowed_list
 
     def return_position(self, start, target, my_dict):
-        if start == target:
-            return start
-    
         visited = set()
         queue = [(start, [start])]
 
@@ -368,7 +374,7 @@ class Board:
     def get_field_start(self, x, y):
         return [x-self.rectStart[0], y-self.rectStart[1]]
     
-    def calculate_all_possible_moves(self):
+    def calculate_all_possible_moves(self): #samo kad su sve dijagonale prazne, trazimo potebncijalnu bolju poziciju
         possible_moves = []
         for row in range(self.dim):
             for col in range(self.dim):
@@ -379,6 +385,7 @@ class Board:
                         new_row, new_col = row + dr, col + dc
                         
                         if 0 <= new_row < self.dim and 0 <= new_col < self.dim:
-                            if self.valid_move(row, col, new_row, new_col, 0, self.currentPlayer):
+                            if self.valid_move(row, col, new_row, new_col, 0, self.currentPlayer): #positionFrom izmeni
                                 possible_moves.append((row, col, new_row, new_col))
         return possible_moves
+    
