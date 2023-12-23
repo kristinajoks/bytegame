@@ -249,7 +249,10 @@ class Board:
                 #naci najblizi stek i proveriti da li je u pravcu
                 #ako jeste, onda je dozvoljeno
                 lista.append(self.find_nearest_nonzero(row1, col1))
-                print(lista)
+                print(lista) #ovde sada vraca listu dozvoljenog kretanja za bit koji sam pomerila!!!
+                #treba prvo da se vidi da li je neki bit bolji za pomeranje pa da se zove za njega
+                #fja dozvoljenih svih poteza ->ona moja da se proveri
+                #game over iskace sve vr da ne zaboravim da popravimo to
                 # if nzrow is not None and self.is_in_direction(row1, col1, nzrow, nzcol, (row2, col2)):
                 #     return True
                 
@@ -274,7 +277,7 @@ class Board:
         while queue:
 
             if len(lista) == 0:
-                if len(my_dict) > 1:
+                if len(my_dict) >= 1:
                     return allowed_list
                     break
                 else: #naredna distanca, da znam zbog vracanja unazad
@@ -311,7 +314,10 @@ class Board:
                     counter += 1
         return allowed_list
 
-    def return_position(start, target, my_dict):
+    def return_position(self, start, target, my_dict):
+        if start == target:
+            return start
+    
         visited = set()
         queue = [(start, [start])]
 
@@ -330,7 +336,8 @@ class Board:
             
             if current not in visited:
                 visited.add(current)
-                for key, (neighbors, _) in my_dict.items():
+                for key, value in my_dict.items():
+                    neighbors = value 
                     if current in neighbors:
                         queue.append((key, path + [key]))
 
