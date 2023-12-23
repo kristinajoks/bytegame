@@ -137,16 +137,19 @@ class Board:
         for i in range(numOfBits):
             bits.append(self.readBit(row1, col1, positionFrom + i))
 
-        # isValid = self.valid_move(row1, col1, row2, col2, positionFrom, bits[0])
-        # if( isValid == None):
-        #     return
-            
-        validMoves = self.calculate_all_possible_moves()
-        print(validMoves)
+        validFields = self.calculate_all_possible_moves(positionFrom)
+        # print(validFields)
 
-        if((row1, col1, row2, col2) not in validMoves):
-            return None
+        if((row1, col1, row2, col2) not in validFields):
+            return None 
+        #trebalo bi da vazi zato sto ce uslovi za visinu da blokiraju potez ako nije dobar, 
+        #a ako zelimo da pomerimo na prazan moracemo da pomerimo ceo,
+        #valid move samo proverava da li je u granicama i ne mesa se u to da li je prazno i visinu
             
+        # #
+        # if not self.stackRules(row1, col1, row2, col2, positionFrom): #?
+        #     return None
+
         #brisanje
         self.writeBits(row1, col1, [0 for _ in range(numOfBits)], numOfBits, True)
 
@@ -158,10 +161,8 @@ class Board:
         #provera da li je neki stek popunjen
         self.updateScore(row2, col2)
 
-        #print(self.calculate_all_possible_moves())
-
         #provera da li je gotova igra
-        if(self.isOver):
+        if(self.isOver()):
             return True
         
     def valid_move(self, row1, col1, row2, col2, positionFrom, bit):
@@ -178,14 +179,6 @@ class Board:
         if(self.currentPlayer == 1 and bit == 0 or self.currentPlayer == 0 and bit == 1):
             return None
         
-        #dodati uslovi za valjanost poteza
-        #pozicija sa koje se pomera je u rangu
-        if(positionFrom < 0 or positionFrom >= self.board[row1][col1][1]):
-            return None
-        
-        if not self.stackRules(row1, col1, row2, col2, positionFrom): #?
-            return None
-
         # Provera da li je potez dijagonalan
         diag = self.diagonal(row1, col1, row2, col2)
         return diag if diag is not None else None
@@ -200,6 +193,7 @@ class Board:
             return "DL"
         elif(row2 == row1+1 and col2 == col1+1):
             return "DD"
+
 
     def is_in_direction(self, start_row, start_col, target_row, target_col, stack_pos):
         # vektori
@@ -239,7 +233,13 @@ class Board:
         
         return False
 
+
     def stackRules(self, row1, col1, row2, col2, positionFrom):
+        #dodati uslovi za valjanost poteza
+        #pozicija sa koje se pomera je u rangu
+        if(positionFrom < 0 or positionFrom >= self.board[row1][col1][1]):
+            return None
+        
         lista = list()
         #broj ukupnih bitova na novom steku je manji od 8
         if(self.board[row2][col2][1] + self.board[row1][col1][1] - positionFrom > 8):
@@ -254,17 +254,22 @@ class Board:
             if(self.areDiagonalEmpty(row1, col1)):
                 #naci najblizi stek i proveriti da li je u pravcu
                 #ako jeste, onda je dozvoljeno
-                lista.append(self.find_nearest_nonzero(row1, col1))
-                lista = list(set(lista))
+                lista.extend(self.find_nearest_nonzero(row1, col1))
+                lista = list(set(lista)) #unhashable type list
 
-                print(lista) #ovde sada vraca listu dozvoljenog kretanja za bit koji sam pomerila!!!
+                if(lista is None or len(lista) == 0):
+                    return False
+
+                return True             
+               
+                #print(lista) #ovde sada vraca listu dozvoljenog kretanja za bit koji sam pomerila!!!
                 #treba prvo da se vidi da li je neki bit bolji za pomeranje pa da se zove za njega
                 #fja dozvoljenih svih poteza ->ona moja da se proveri
                 #game over iskace sve vr da ne zaboravim da popravimo to
                 # if nzrow is not None and self.is_in_direction(row1, col1, nzrow, nzcol, (row2, col2)):
                 #     return True
                 
-                return False 
+            return False #ne sme da se pomeri na istu poziciju ako nisu prazne sve dijagonale
         
         return True
 
@@ -273,9 +278,9 @@ class Board:
         directions = [(-1, -1), (-1, 1), (1, -1), (1, 1)]
         visited = [[False for _ in range(self.dim)] for _ in range(self.dim)]
         queue = deque([(start_row + dr, start_col + dc)
-                        for dr, dc in directions
-                        if 0 < start_row + dr < len(self.board) and 0 < start_col + dc < len(self.board[0])
-                        ])
+            for dr, dc in directions
+            if 0 < start_row + dr < len(self.board) and 0 < start_col + dc < len(self.board[0])
+            ])
 
         lista = list(queue)
         lista2 = list()
@@ -309,12 +314,12 @@ class Board:
                     lista2.append((new_row,new_col))
                     my_dict = {(current_row, current_col): lista2}
 
-                    
-                    if self.board[new_row][new_col][1] > 0:
-                        if(distance == 2):
-                            allowed_list.append((current_row, current_col))
-                        else:
-                            allowed_list.append(self.return_position((new_row, new_col), (start_row, start_col), my_dict))
+                    if(new_row > 0 and new_row < self.dim and new_col > 0 and new_col < self.dim): #dodata provera
+                        if self.board[new_row][new_col][1] > 0:
+                            if(distance == 2):
+                                allowed_list.append((current_row, current_col))
+                            else:
+                                allowed_list.append(self.return_position((new_row, new_col), (start_row, start_col), my_dict))
 
                     if (0 <= new_row < self.dim and 0 <= new_col < self.dim and not visited[new_row][new_col]
                         and (new_row != start_row or new_col != start_col)):
@@ -322,6 +327,7 @@ class Board:
 
                     counter += 1
         return allowed_list
+
 
     def return_position(self, start, target, my_dict):
         visited = set()
@@ -349,12 +355,12 @@ class Board:
 
         return None
 
+
     def calculate_distance(self, start_row, current_row, start_col, current_col):
         if(start_row == current_row): 
             return abs(start_col - current_col)
         
         return abs(start_row - current_row)
-        
         
     
     def updateScore(self, row, col):
@@ -374,7 +380,8 @@ class Board:
     def get_field_start(self, x, y):
         return [x-self.rectStart[0], y-self.rectStart[1]]
     
-    def calculate_all_possible_moves(self): #samo kad su sve dijagonale prazne, trazimo potebncijalnu bolju poziciju
+
+    def calculate_all_possible_moves(self, positionFrom): #samo kad su sve dijagonale prazne, trazimo potebncijalnu bolju poziciju
         possible_moves = []
         for row in range(self.dim):
             for col in range(self.dim):
@@ -386,6 +393,9 @@ class Board:
                         
                         if 0 <= new_row < self.dim and 0 <= new_col < self.dim:
                             if self.valid_move(row, col, new_row, new_col, 0, self.currentPlayer): #positionFrom izmeni
-                                possible_moves.append((row, col, new_row, new_col))
+                                #
+                                if(self.stackRules(row, col, new_row, new_col, positionFrom)):
+                                    possible_moves.append((row, col, new_row, new_col))
+                                # possible_moves.append((row, col, new_row, new_col))
         return possible_moves
     
