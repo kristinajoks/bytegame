@@ -386,7 +386,7 @@ class Board:
         for row in range(self.dim):
             for col in range(self.dim):
                 # proverava da li stek pripada trenutnom igracu
-                if self.board[row][col][1] > 0 and self.readBit(row, col, 0) == self.currentPlayer:
+                if self.board[row][col][1] > 0 and self.readBit(row, col, 0) == self.currentPlayer: #ovde bi mogla da se doradi za poziciju
                     # dijagonalni susedi
                     for dr, dc in [(-1, -1), (-1, 1), (1, -1), (1, 1)]:
                         new_row, new_col = row + dr, col + dc
