@@ -109,7 +109,6 @@ class Board:
         self.board[row][col] = (byte, pos)
 
 
-
     def move(self, movement): 
         
         x1, y1 = self.get_field_start(movement[0], movement[1])
@@ -125,6 +124,18 @@ class Board:
         positionFrom = 0
         if(clicked_bit < 0):
             return None
+ 
+        validFields = self.calculate_all_possible_moves()
+
+        if(validFields is None or len(validFields) == 0): #ako nema dozvoljenih poteza prepusta se
+            self.currentPlayer = 0 if self.currentPlayer == 1 else 1 
+            return False
+
+        if((row1, col1, row2, col2, positionFrom) not in validFields):
+            return None 
+       
+        ###
+        
         if(clicked_bit > self.board[row1][col1][1]):
             positionFrom = self.board[row1][col1][1] - 1
         else:
@@ -137,19 +148,6 @@ class Board:
         for i in range(numOfBits):
             bits.append(self.readBit(row1, col1, positionFrom + i))
 
-        validFields = self.calculate_all_possible_moves(positionFrom)
-        # print(validFields)
-
-        if((row1, col1, row2, col2) not in validFields):
-            return None 
-        #trebalo bi da vazi zato sto ce uslovi za visinu da blokiraju potez ako nije dobar, 
-        #a ako zelimo da pomerimo na prazan moracemo da pomerimo ceo,
-        #valid move samo proverava da li je u granicama i ne mesa se u to da li je prazno i visinu
-            
-        # #
-        # if not self.stackRules(row1, col1, row2, col2, positionFrom): #?
-        #     return None
-
         #brisanje
         self.writeBits(row1, col1, [0 for _ in range(numOfBits)], numOfBits, True)
 
@@ -158,14 +156,12 @@ class Board:
 
         self.currentPlayer = 0 if self.currentPlayer == 1 else 1
         
-        #provera da li je neki stek popunjen
         self.updateScore(row2, col2)
 
-        #provera da li je gotova igra
         if(self.isOver()):
             return True
         
-    def valid_move(self, row1, col1, row2, col2, positionFrom, bit):
+    def valid_move(self, row1, col1, row2, col2, bit):
         if(row1 == row2 or col1 == col2):
             return None
         if(row1 < 0 or row1 >= self.dim or col1 < 0 or col1 >= self.dim):
@@ -207,22 +203,22 @@ class Board:
     
 
     def areDiagonalEmpty(self, row, col):
-        # Provera donje leve dijagonale
+        # DL
         ll = 0
         if (row - 1 >= 0 and col - 1 >= 0 and row - 1 < len(self.board) and col - 1 < len(self.board[0])):
             ll = self.board[row - 1][col - 1][1]
 
-        # Provera donje desne dijagonale
+        # DD
         lr = 0
         if (row - 1 >= 0 and col + 1 >= 0 and row - 1 < len(self.board) and col + 1 < len(self.board[0])):
             lr = self.board[row - 1][col + 1][1]
 
-        # Provera gornje leve dijagonale
+        # GL
         ul = 0
         if (row + 1 >= 0 and col - 1 >= 0 and row + 1 < len(self.board) and col - 1 < len(self.board[0])):
             ul = self.board[row + 1][col - 1][1]
 
-        # Provera gornje desne dijagonale
+        # GD
         ur = 0
         if (row + 1 >= 0 and col + 1 >= 0 and row + 1 < len(self.board) and col + 1 < len(self.board[0])):
             ur = self.board[row + 1][col + 1][1]
@@ -235,7 +231,6 @@ class Board:
 
 
     def stackRules(self, row1, col1, row2, col2, positionFrom):
-        #dodati uslovi za valjanost poteza
         #pozicija sa koje se pomera je u rangu
         if(positionFrom < 0 or positionFrom >= self.board[row1][col1][1]):
             return None
@@ -255,7 +250,7 @@ class Board:
                 #naci najblizi stek i proveriti da li je u pravcu
                 #ako jeste, onda je dozvoljeno
                 lista.extend(self.find_nearest_nonzero(row1, col1))
-                lista = list(set(lista)) #unhashable type list
+                lista = list(set(lista)) 
 
                 if(lista is None or len(lista) == 0):
                     return False
@@ -265,7 +260,6 @@ class Board:
                 #print(lista) #ovde sada vraca listu dozvoljenog kretanja za bit koji sam pomerila!!!
                 #treba prvo da se vidi da li je neki bit bolji za pomeranje pa da se zove za njega
                 #fja dozvoljenih svih poteza ->ona moja da se proveri
-                #game over iskace sve vr da ne zaboravim da popravimo to
                 # if nzrow is not None and self.is_in_direction(row1, col1, nzrow, nzcol, (row2, col2)):
                 #     return True
                 
@@ -293,7 +287,6 @@ class Board:
                 if len(my_dict) >= 1:
                     allowed_list = [x for x in allowed_list if x is not None]
                     return allowed_list
-                    break
                 else: #naredna distanca, da znam zbog vracanja unazad
                     for _ in range(counter):
                         if queue:
@@ -381,21 +374,21 @@ class Board:
         return [x-self.rectStart[0], y-self.rectStart[1]]
     
 
-    def calculate_all_possible_moves(self, positionFrom): #samo kad su sve dijagonale prazne, trazimo potebncijalnu bolju poziciju
+    def calculate_all_possible_moves(self): 
         possible_moves = []
         for row in range(self.dim):
             for col in range(self.dim):
-                # proverava da li stek pripada trenutnom igracu
-                if self.board[row][col][1] > 0 and self.readBit(row, col, 0) == self.currentPlayer: #ovde bi mogla da se doradi za poziciju
-                    # dijagonalni susedi
-                    for dr, dc in [(-1, -1), (-1, 1), (1, -1), (1, 1)]:
-                        new_row, new_col = row + dr, col + dc
-                        
-                        if 0 <= new_row < self.dim and 0 <= new_col < self.dim:
-                            if self.valid_move(row, col, new_row, new_col, 0, self.currentPlayer): #positionFrom izmeni
-                                #
-                                if(self.stackRules(row, col, new_row, new_col, positionFrom)):
-                                    possible_moves.append((row, col, new_row, new_col))
-                                # possible_moves.append((row, col, new_row, new_col))
+                for dr, dc in [(-1, -1), (-1, 1), (1, -1), (1, 1)]:
+                    new_row, new_col = row + dr, col + dc
+                    
+                    if 0 <= new_row < self.dim and 0 <= new_col < self.dim:
+                        #za dato polje, treba proveriti za svaki bit
+
+                        for i in range(self.board[row][col][1]):
+                            bit = self.readBit(row, col, i)
+                            
+                            if self.valid_move(row, col, new_row, new_col, bit): 
+                                if(self.stackRules(row, col, new_row, new_col, i)):
+                                    possible_moves.append((row, col, new_row, new_col, i)) 
+                                    
         return possible_moves
-    

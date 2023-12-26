@@ -84,7 +84,22 @@ while running:
 
     board.drawMatrix(screenGame)
 
-    if gameOver:
+    current_player = board.currentPlayer
+    if current_player:
+        current_player_text = font.render("White's Turn", True, (0, 0, 0))
+        screenGame.blit(current_player_text, (450, 615))
+    else:
+        current_player_text = font.render("Black's Turn", True, (0, 0, 0))
+        screenGame.blit(current_player_text, (60, 20))
+    #TODO
+    #da se napravi da tekst ide gore levo ili dole desno u zavisnosti i od toga ko je izabran na pocetku
+        #i da pise your turn za izabranu boju
+    
+    if gameOver == "False":
+        game_over_text = font.render("No possible moves!", True, (0, 0, 0))
+        screenGame.blit(game_over_text, (250, 20))
+
+    if gameOver == "True":
         game_over_text = font.render("Game Over!", True, (0, 0, 0))
         screenGame.blit(game_over_text, (250, 20))
 
