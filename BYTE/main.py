@@ -80,7 +80,8 @@ while running:
             movement[0], movement[1] = pygame.mouse.get_pos()
         if event.type == pygame.MOUSEBUTTONUP:
             movement[2], movement[3] = pygame.mouse.get_pos()
-            gameOver = board.move(movement)
+            if(not gameOver):
+                gameOver = board.move(movement)
 
     board.drawMatrix(screenGame)
 
@@ -94,14 +95,13 @@ while running:
     #TODO
     #da se napravi da tekst ide gore levo ili dole desno u zavisnosti i od toga ko je izabran na pocetku
         #i da pise your turn za izabranu boju
-    
-    if gameOver == "False":
-        game_over_text = font.render("No possible moves!", True, (0, 0, 0))
-        screenGame.blit(game_over_text, (250, 20))
 
-    if gameOver == "True":
+    if gameOver == True:
         game_over_text = font.render("Game Over!", True, (0, 0, 0))
         screenGame.blit(game_over_text, (250, 20))
+
+    score_text = font.render(f"{board.users[0].score} : {board.users[1].score}", True, (0, 0, 0))
+    screenGame.blit(score_text, (250, 615))
 
     pygame.display.flip()
    
