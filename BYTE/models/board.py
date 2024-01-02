@@ -125,6 +125,17 @@ class Board:
         if(clicked_bit < 0):
             return None
  
+        ###
+        
+        if(not self.board[row1][col1][1]):
+            return None
+        
+        if(clicked_bit > self.board[row1][col1][1]):
+            positionFrom = self.board[row1][col1][1] - 1
+        else:
+            positionFrom = int(clicked_bit)
+
+
         validFields = self.calculate_all_possible_moves()
 
         if(validFields is None or len(validFields) == 0): #ako nema dozvoljenih poteza prepusta se
@@ -134,13 +145,6 @@ class Board:
         if((row1, col1, row2, col2) not in validFields):
             return None 
        
-        ###
-        
-        if(clicked_bit > self.board[row1][col1][1]):
-            positionFrom = self.board[row1][col1][1] - 1
-        else:
-            positionFrom = int(clicked_bit)
-
         #citanje
         bits = []
 
@@ -255,8 +259,19 @@ class Board:
                 if(lista is None or len(lista) == 0):
                     return False
 
+<<<<<<< HEAD
                 return True             
             
+=======
+                # print(lista) #ovde sada vraca listu dozvoljenog kretanja za bit koji sam pomerila!!!
+                # return True 
+                return lista            
+               
+                #treba prvo da se vidi da li je neki bit bolji za pomeranje pa da se zove za njega
+                #fja dozvoljenih svih poteza ->ona moja da se proveri
+                # if nzrow is not None and self.is_in_direction(row1, col1, nzrow, nzcol, (row2, col2)):
+                #     return True
+>>>>>>> 2fb12464ce5efdb0064c8709deefee3ef19a6117
                 
             return False #ne sme da se pomeri na istu poziciju ako nisu prazne sve dijagonale
         
@@ -360,7 +375,7 @@ class Board:
 
 
     def isOver(self):
-        if(self.users[self.currentPlayer].score >= self.maxStacks/2):
+        if(self.users[0].score >= self.maxStacks/2 or self.users[1].score >= self.maxStacks/2):
             return True
         return False
 
@@ -371,8 +386,10 @@ class Board:
 
     def calculate_all_possible_moves(self): 
         possible_moves = []
+        empty_moves = []
         for row in range(self.dim):
             for col in range(self.dim):
+<<<<<<< HEAD
                 # Proverava svaki bit počevši od najvišeg
                 for bit_position in range(self.board[row][col][1] - 1, -1, -1):
                     bit = self.readBit(row, col, bit_position)
@@ -385,3 +402,28 @@ class Board:
                                     if self.stackRules(row, col, new_row, new_col, bit_position):
                                         possible_moves.append((row, col, new_row, new_col)) 
         return possible_moves
+=======
+                for dr, dc in [(-1, -1), (-1, 1), (1, -1), (1, 1)]:
+                    new_row, new_col = row + dr, col + dc
+                    
+                    if 0 <= new_row < self.dim and 0 <= new_col < self.dim:
+                        #za dato polje, treba proveriti za svaki bit
+
+                        for i in range(self.board[row][col][1]):
+                            bit = self.readBit(row, col, i)
+                            
+                            if self.valid_move(row, col, new_row, new_col, bit): 
+                                tmp = self.stackRules(row, col, new_row, new_col, i)
+                                
+                                # if(type(tmp) is list and len(tmp) > 0):
+                                #     empty_moves.append((row, col, tmp[0][0], tmp[0][1], i))
+                                #     empty_moves = list(set(empty_moves))
+
+                                if(tmp):
+                                    possible_moves.append((row, col, new_row, new_col, i)) 
+
+        if(len(possible_moves) == 0):
+            return empty_moves
+        
+        return possible_moves
+>>>>>>> 2fb12464ce5efdb0064c8709deefee3ef19a6117
