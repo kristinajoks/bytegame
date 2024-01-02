@@ -131,7 +131,7 @@ class Board:
             self.currentPlayer = 0 if self.currentPlayer == 1 else 1 
             return False
 
-        if((row1, col1, row2, col2, positionFrom) not in validFields):
+        if((row1, col1, row2, col2) not in validFields):
             return None 
        
         ###
@@ -256,12 +256,7 @@ class Board:
                     return False
 
                 return True             
-               
-                #print(lista) #ovde sada vraca listu dozvoljenog kretanja za bit koji sam pomerila!!!
-                #treba prvo da se vidi da li je neki bit bolji za pomeranje pa da se zove za njega
-                #fja dozvoljenih svih poteza ->ona moja da se proveri
-                # if nzrow is not None and self.is_in_direction(row1, col1, nzrow, nzcol, (row2, col2)):
-                #     return True
+            
                 
             return False #ne sme da se pomeri na istu poziciju ako nisu prazne sve dijagonale
         
@@ -378,17 +373,15 @@ class Board:
         possible_moves = []
         for row in range(self.dim):
             for col in range(self.dim):
-                for dr, dc in [(-1, -1), (-1, 1), (1, -1), (1, 1)]:
-                    new_row, new_col = row + dr, col + dc
-                    
-                    if 0 <= new_row < self.dim and 0 <= new_col < self.dim:
-                        #za dato polje, treba proveriti za svaki bit
-
-                        for i in range(self.board[row][col][1]):
-                            bit = self.readBit(row, col, i)
-                            
-                            if self.valid_move(row, col, new_row, new_col, bit): 
-                                if(self.stackRules(row, col, new_row, new_col, i)):
-                                    possible_moves.append((row, col, new_row, new_col, i)) 
-                                    
+                # Proverava svaki bit počevši od najvišeg
+                for bit_position in range(self.board[row][col][1] - 1, -1, -1):
+                    bit = self.readBit(row, col, bit_position)
+                    if bit == self.currentPlayer:  # Proverava da li bit odgovara trenutnom igraču
+                        for dr, dc in [(-1, -1), (-1, 1), (1, -1), (1, 1)]:
+                            new_row, new_col = row + dr, col + dc
+                            if 0 <= new_row < self.dim and 0 <= new_col < self.dim:
+                                # Provera validnosti poteza za bit na trenutnoj poziciji i sve iznad njega
+                                if self.valid_move(row, col, new_row, new_col, bit): 
+                                    if self.stackRules(row, col, new_row, new_col, bit_position):
+                                        possible_moves.append((row, col, new_row, new_col)) 
         return possible_moves
