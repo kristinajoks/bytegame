@@ -4,7 +4,7 @@ from helpers.binary_helper import *
 from models.user import User
 
 class Board:
-    def _init_(self, dim, rectSize, rectStart):
+    def __init__(self, dim, rectSize, rectStart):
         self.dim = dim
         self.board=[[(bytes([0]), 0) for _ in range(dim)] for _ in range(dim)]
         self.bit = (dim-2)*dim/2
