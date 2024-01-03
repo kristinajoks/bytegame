@@ -136,13 +136,13 @@ class Board:
             positionFrom = int(clicked_bit)
 
 
-        validFields = self.calculate_all_possible_moves()
-
+        validFields = self.calculate_all_possible_moves() 
+        #vrati dozvoljene za sve pozicije nevezano za to da li postoji bolji
         if(validFields is None or len(validFields) == 0): #ako nema dozvoljenih poteza prepusta se
             self.currentPlayer = 0 if self.currentPlayer == 1 else 1 
             return False
 
-        if((row1, col1, row2, col2, positionFrom) not in validFields):
+        if((row1, col1, row2, col2) not in validFields):
             return None 
        
         #citanje
@@ -385,15 +385,25 @@ class Board:
         for row in range(self.dim):
             for col in range(self.dim):
 
-                # Proverava svaki bit počevši od najvišeg
+                # za svaki bit
                 for bit_position in range(self.board[row][col][1] - 1, -1, -1):
                     bit = self.readBit(row, col, bit_position)
-                    if bit == self.currentPlayer:  # Proverava da li bit odgovara trenutnom igraču
+                    if bit == self.currentPlayer:  # da li odgovara trenutnom igracu
                         for dr, dc in [(-1, -1), (-1, 1), (1, -1), (1, 1)]:
                             new_row, new_col = row + dr, col + dc
                             if 0 <= new_row < self.dim and 0 <= new_col < self.dim:
-                                # Provera validnosti poteza za bit na trenutnoj poziciji i sve iznad njega
-                                if self.valid_move(row, col, new_row, new_col, bit): 
-                                    if self.stackRules(row, col, new_row, new_col, bit_position):
-                                        possible_moves.append((row, col, new_row, new_col)) 
+                                # validnost
+                                if self.valid_move(row, col, new_row, new_col, bit):   
+                                    tmp = self.stackRules(row, col, new_row, new_col, bit_position)
+
+                                    if(type(tmp) is list and len(tmp) > 0):
+                                         empty_moves.append((row, col, tmp[0][0], tmp[0][1]))
+                                         empty_moves = list(set(empty_moves))
+
+                                    if(tmp):
+                                        possible_moves.append((row, col, new_row, new_col))
+
+        if(len(possible_moves) == 0):
+            return empty_moves
+                                        
         return possible_moves
