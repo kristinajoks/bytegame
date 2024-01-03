@@ -138,6 +138,7 @@ class Board:
 
         validFields = self.calculate_all_possible_moves() 
         #vrati dozvoljene za sve pozicije nevezano za to da li postoji bolji
+        #ili ne malo sam zbunjena
         if(validFields is None or len(validFields) == 0): #ako nema dozvoljenih poteza prepusta se
             self.currentPlayer = 0 if self.currentPlayer == 1 else 1 
             return False
@@ -383,9 +384,9 @@ class Board:
         possible_moves = []
         empty_moves = []
         for row in range(self.dim):
-            for col in range(self.dim):
+            for col in range(self.dim): #mogu da napisem row +1 i range 7 jer nikad ne ide u prvu i poslednjucvrstu
 
-                # za svaki bit
+                # za svaki bit, ali dovoljno je da jednom bude True, ako ima vise belih u steku ispitivace za svakog a ne mora
                 for bit_position in range(self.board[row][col][1] - 1, -1, -1):
                     bit = self.readBit(row, col, bit_position)
                     if bit == self.currentPlayer:  # da li odgovara trenutnom igracu
@@ -394,16 +395,6 @@ class Board:
                             if 0 <= new_row < self.dim and 0 <= new_col < self.dim:
                                 # validnost
                                 if self.valid_move(row, col, new_row, new_col, bit):   
-                                    tmp = self.stackRules(row, col, new_row, new_col, bit_position)
-
-                                    if(type(tmp) is list and len(tmp) > 0):
-                                         empty_moves.append((row, col, tmp[0][0], tmp[0][1]))
-                                         empty_moves = list(set(empty_moves))
-
-                                    if(tmp):
-                                        possible_moves.append((row, col, new_row, new_col))
-
-        if(len(possible_moves) == 0):
-            return empty_moves
-                                        
+                                    if self.stackRules(row, col, new_row, new_col, bit_position):
+                                        possible_moves.append((row, col, new_row, new_col)) 
         return possible_moves
