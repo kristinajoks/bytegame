@@ -143,7 +143,7 @@ class Board:
             self.currentPlayer = 0 if self.currentPlayer == 1 else 1 
             return False
 
-        if((row1, col1, row2, col2) not in validFields):
+        if((row1, col1, row2, col2, positionFrom) not in validFields):
             return None 
        
         #citanje
@@ -387,7 +387,7 @@ class Board:
             for col in range(self.dim): #mogu da napisem row +1 i range 7 jer nikad ne ide u prvu i poslednjucvrstu
 
                 # za svaki bit, ali dovoljno je da jednom bude True, ako ima vise belih u steku ispitivace za svakog a ne mora
-                for bit_position in range(self.board[row][col][1] - 1, -1, -1):
+                for bit_position in range(self.board[row][col][1]):
                     bit = self.readBit(row, col, bit_position)
                     if bit == self.currentPlayer:  # da li odgovara trenutnom igracu
                         for dr, dc in [(-1, -1), (-1, 1), (1, -1), (1, 1)]:
@@ -396,5 +396,5 @@ class Board:
                                 # validnost
                                 if self.valid_move(row, col, new_row, new_col, bit):   
                                     if self.stackRules(row, col, new_row, new_col, bit_position):
-                                        possible_moves.append((row, col, new_row, new_col)) 
+                                        possible_moves.append((row, col, new_row, new_col, bit_position)) 
         return possible_moves
