@@ -140,7 +140,7 @@ class Board:
             self.move(row1, col1, row2, col2, positionFrom)
 
         else:
-            best_move = [0, 0, 0, 0, 0] 
+            best_move = [4, 4, 0, 0, 0] 
             #pitanje da li treba da se salje row i col to i kako da se inicijaizuje pokret
             self.minimax(0, self.NEG_INFINITY, self.POS_INFINITY, True, 1, 1, 0, 0, 0, best_move) 
 
@@ -457,7 +457,7 @@ class Board:
     def calculate_all_possible_moves(self): 
         possible_moves_best = []
         possible_moves_empty_diagonals = []
-        possible_moves = []
+
         for row in range(self.dim):
             for col in range(self.dim): #mogu da napisem row +1 i range 7 jer nikad ne ide u prvu i poslednjucvrstu
 
@@ -484,7 +484,7 @@ class Board:
                                         possible_moves_best.append((row, col, new_row, new_col, bit_position))
 
         if len(possible_moves_best) == 0:
-            min_v = min(item[2] for item in possible_moves_empty_diagonals)
+            min_v = min(item[4] for item in possible_moves_empty_diagonals)
             possible_moves_empty_diagonals = [(elem[0], elem[1], elem[2], elem[3], elem[5]) for elem in possible_moves_empty_diagonals if elem[4] == min_v]
             print(possible_moves_empty_diagonals)
             return possible_moves_empty_diagonals
