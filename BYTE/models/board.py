@@ -318,7 +318,7 @@ class Board:
         if(positionFrom < 0 or positionFrom >= self.board[row1][col1][1]):
             return None
         
-        lista = list()
+        nearest_nonzero = dict()
         #broj ukupnih bitova na novom steku je manji od 8
         if(self.board[row2][col2][1] + self.board[row1][col1][1] - positionFrom > 8):
             return False
@@ -332,20 +332,16 @@ class Board:
             if(self.areDiagonalEmpty(row1, col1)):
                 #naci najblizi stek i proveriti da li je u pravcu
                 #ako jeste, onda je dozvoljeno
-                lista.extend(self.find_nearest_nonzero(row1, col1))
-                lista = list(set(lista)) 
-
-                if(lista is None or len(lista) == 0):
-                    return False
-
-                return lista            
-               
-                #treba prvo da se vidi da li je neki bit bolji za pomeranje pa da se zove za njega
-                #fja dozvoljenih svih poteza ->ona moja da se proveri
-                # if nzrow is not None and self.is_in_direction(row1, col1, nzrow, nzcol, (row2, col2)):
-                #     return True
+                nearest_nonzero = self.find_nearest_nonzero(row1, col1)
                 
-            return False #ne sme da se pomeri na istu poziciju ako nisu prazne sve dijagonale
+                print(nearest_nonzero)
+
+                if nearest_nonzero: 
+                    return nearest_nonzero      
+                else:
+                    return False
+                
+            return False
         
         return True
 
@@ -360,15 +356,15 @@ class Board:
 
         lista = list(queue)
         lista2 = list()
-        allowed_list = list()
+        allowed_elements = dict()
         my_dict = {(start_row, start_col): lista}
         counter = 0
         while queue:
 
             if len(lista) == 0:
                 if len(my_dict) >= 1:
-                    allowed_list = [x for x in allowed_list if x is not None]
-                    return allowed_list
+                    allowed_elements = {k: v for k, v in allowed_elements.items() if k is not None}
+                    return allowed_elements
                 else: #naredna distanca, da znam zbog vracanja unazad
                     for _ in range(counter):
                         if queue:
@@ -392,16 +388,16 @@ class Board:
                     if(new_row > 0 and new_row < self.dim and new_col > 0 and new_col < self.dim): #dodata provera
                         if self.board[new_row][new_col][1] > 0:
                             if(distance == 2):
-                                allowed_list.append((current_row, current_col))
+                                allowed_elements[(current_row,current_col)] = distance
                             else:
-                                allowed_list.append(self.return_position((new_row, new_col), (start_row, start_col), my_dict))
+                                allowed_elements[self.return_position((new_row, new_col), (start_row, start_col), my_dict)] = distance
 
                     if (0 <= new_row < self.dim and 0 <= new_col < self.dim and not visited[new_row][new_col]
                         and (new_row != start_row or new_col != start_col)):
                         queue.append((new_row, new_col))
 
                     counter += 1
-        return allowed_list
+        return allowed_elements
 
 
     def return_position(self, start, target, my_dict):
@@ -459,13 +455,14 @@ class Board:
     
 
     def calculate_all_possible_moves(self): 
+        possible_moves_best = []
+        possible_moves_empty_diagonals = []
         possible_moves = []
-        empty_moves = []
         for row in range(self.dim):
             for col in range(self.dim): #mogu da napisem row +1 i range 7 jer nikad ne ide u prvu i poslednjucvrstu
 
                 # za svaki bit, ali dovoljno je da jednom bude True, ako ima vise belih u steku ispitivace za svakog a ne mora
-                for bit_position in range(self.board[row][col][1]):
+                for bit_position in range(self.board[row][col][1] - 1, -1, -1):
                     bit = self.readBit(row, col, bit_position)
                     if bit == self.currentPlayer:  # da li odgovara trenutnom igracu
                         for dr, dc in [(-1, -1), (-1, 1), (1, -1), (1, 1)]:
@@ -473,6 +470,23 @@ class Board:
                             if 0 <= new_row < self.dim and 0 <= new_col < self.dim:
                                 # validnost
                                 if self.valid_move(row, col, new_row, new_col, bit):   
-                                    if self.stackRules(row, col, new_row, new_col, bit_position):
-                                        possible_moves.append((row, col, new_row, new_col, bit_position)) 
-        return possible_moves
+                                    keys_from_stack_rules = self.stackRules(row, col, new_row, new_col, bit_position)
+                                    if isinstance(keys_from_stack_rules, dict):
+                                        new_moves = [(row, col, k[0], k[1], v, bit_position) for k, v in keys_from_stack_rules.items()]
+                                        for move in new_moves:
+                                            if move not in possible_moves_empty_diagonals:
+                                                possible_moves_empty_diagonals.append(move)
+                                                print(possible_moves_empty_diagonals)
+                                                print(new_moves)
+                                                print(move)
+                                                print("Tu sam")
+                                    if keys_from_stack_rules is True: #ovde bi bio najbolji potez
+                                        possible_moves_best.append((row, col, new_row, new_col, bit_position))
+
+        if len(possible_moves_best) == 0:
+            min_v = min(item[2] for item in possible_moves_empty_diagonals)
+            possible_moves_empty_diagonals = [(elem[0], elem[1], elem[2], elem[3], elem[5]) for elem in possible_moves_empty_diagonals if elem[4] == min_v]
+            print(possible_moves_empty_diagonals)
+            return possible_moves_empty_diagonals
+                                    
+        return possible_moves_best
