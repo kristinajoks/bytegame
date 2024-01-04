@@ -30,7 +30,6 @@ class Board:
                         else:
                             self.writeBits(row, col, [0], 1, False)
 
-
     def drawMatrix(self, screen):
         x_offset = 0
         y_offset = 0
@@ -71,7 +70,6 @@ class Board:
             x_offset = 0
             y_offset += self.squareSize
 
-
     def readBit(self, row, col, pos): #positionFrom
         if pos >= 0:
             byte = self.board[row][col][0]
@@ -80,7 +78,6 @@ class Board:
             return result > 0
         else:
             return None
-
 
     def writeBits(self, row, col, bits, numOfBits, overwrite): #dodati poziciju sa koje se pomera
         
@@ -109,7 +106,6 @@ class Board:
             pos = self.board[row][col][1] - numOfBits
 
         self.board[row][col] = (byte, pos)
-
 
     def play(self, movement):        
 
@@ -179,8 +175,7 @@ class Board:
 
         if(self.isOver()):
             return True
-        
-    
+         
     NEG_INFINITY = float('-inf')
     POS_INFINITY = float('inf')
  
