@@ -5,18 +5,19 @@ from helpers.binary_helper import *
 from models.user import User
 
 class Board:
-    def __init__(self, dim, rectSize, rectStart):
+    def __init__(self, dim, rectSize, rectStart, computer):
         self.dim = dim
         self.board=[[(bytes([0]), 0) for _ in range(dim)] for _ in range(dim)]
         self.bit = (dim-2)*dim/2
         self.byte = self.bit/8
         self.squareSize = rectSize / dim
-        self.bitHeight = 10;
+        self.bitHeight = 10
         self.rectStart = rectStart
         self.currentPlayer = 1
         self.fillMatrix()
         self.maxStacks = ((self.dim-2) * self.dim)/16
         self.users = [User(0), User(1)] #sluzi samo za dodavanje poena
+        self.computer = computer
         
 
     def fillMatrix(self):
@@ -110,36 +111,48 @@ class Board:
         self.board[row][col] = (byte, pos)
 
 
-    def move(self, movement): 
-        
-        x1, y1 = self.get_field_start(movement[0], movement[1])
-        x2, y2 = self.get_field_start(movement[2], movement[3])
+    def play(self, movement):        
 
-        row1 = int(y1 / self.squareSize)
-        col1 = int(x1 / self.squareSize)
-        row2 = int(y2 / self.squareSize)
-        col2 = int(x2 / self.squareSize)
+        if(self.computer != self.currentPlayer): # korisnik
 
-        clicked_bit = int(((row1 + 1) * self.squareSize) - y1 ) / self.bitHeight
+            x1, y1 = self.get_field_start(movement[0], movement[1])
+            x2, y2 = self.get_field_start(movement[2], movement[3])
 
-        positionFrom = 0
-        if(clicked_bit < 0):
-            return None
- 
-        ###
-        
-        if(not self.board[row1][col1][1]):
-            return None
-        
-        if(clicked_bit > self.board[row1][col1][1]):
-            positionFrom = self.board[row1][col1][1] - 1
+            row1 = int(y1 / self.squareSize)
+            col1 = int(x1 / self.squareSize)
+            row2 = int(y2 / self.squareSize)
+            col2 = int(x2 / self.squareSize)
+
+            clicked_bit = int(((row1 + 1) * self.squareSize) - y1 ) / self.bitHeight
+
+            positionFrom = 0
+            if(clicked_bit < 0):
+                return None
+    
+            if(not self.board[row1][col1][1]):
+                return None
+            
+            if(clicked_bit > self.board[row1][col1][1]):
+                positionFrom = self.board[row1][col1][1] - 1
+            else:
+                positionFrom = int(clicked_bit)
+
+            self.move(row1, col1, row2, col2, positionFrom)
+
         else:
-            positionFrom = int(clicked_bit)
+            best_move = [0, 0, 0, 0, 0] 
+            #pitanje da li treba da se salje row i col to i kako da se inicijaizuje pokret
+            self.minimax(0, self.NEG_INFINITY, self.POS_INFINITY, True, 1, 1, 0, 0, 0, best_move) 
+
+            self.move(best_move[0], best_move[1], best_move[2], best_move[3], best_move[4]) #bice parametar move
 
 
+    def move(self, row1, col1, row2, col2, positionFrom): 
+        
         validFields = self.calculate_all_possible_moves() 
         #vrati dozvoljene za sve pozicije nevezano za to da li postoji bolji
         #ili ne malo sam zbunjena
+
         if(validFields is None or len(validFields) == 0): #ako nema dozvoljenih poteza prepusta se
             self.currentPlayer = 0 if self.currentPlayer == 1 else 1 
             return False
@@ -167,39 +180,50 @@ class Board:
         if(self.isOver()):
             return True
         
+    
+    NEG_INFINITY = float('-inf')
+    POS_INFINITY = float('inf')
  
-    min = -1000000
-    max = 1000000
-    def minimax(self, depth, alpha, beta, isMaxPlayer, row_from, col_from, row_to, col_to, pos_from):
-        if(self.terminal(row_from, col_from, row_to, col_to, pos_from)):
-            return self.stateValue(row_from, col_from)
-        
-        if(depth == math.log(self.dim, 2)):
-            return self.evaluate()
-        
-        if (isMaxPlayer):
-            maxEval = self.min
+    def minimax(self, depth, alpha, beta, is_max_player, row_from, col_from, row_to, col_to, pos_from, best_move):
+        if self.terminal(row_from, col_from, row_to, col_to, pos_from):
+            return self.state_value(row_from, col_from)
+
+        if depth == math.log(self.dim, 2):
+            return self.evaluate(row_from, col_from, row_to, col_to, pos_from)
+
+        if is_max_player:
+            max_eval = self.NEG_INFINITY
             for move in self.calculate_all_possible_moves():
-                eval = self.minimax(depth + 1, alpha, beta, False, move[0], move[1], move[2], move[3], 0)
-                maxEval = max(maxEval, eval)
-                alpha = max(alpha, eval)
-                if(beta <= alpha):
+                eval_score = self.minimax(depth + 1, alpha, beta, False, move[0], move[1], move[2], move[3], move[4], best_move)
+                if eval_score > max_eval:
+                    max_eval = eval_score
+                    if depth == 0:
+                        best_move[0], best_move[1], best_move[2], best_move[3], best_move[4] = move[0], move[1], move[2], move[3], move[4]
+                alpha = max(alpha, eval_score)
+                if beta <= alpha:
                     break
-            return maxEval
+            return max_eval
         else:
-            minEval = self.max
+            min_eval = self.POS_INFINITY
             for move in self.calculate_all_possible_moves():
-                eval = self.minimax(depth + 1, alpha, beta, True, move[0], move[1], move[2], move[3], 0)
-                minEval = min(minEval, eval)
-                beta = min(beta, eval)
-                if(beta <= alpha):
+                eval_score = self.minimax(depth + 1, alpha, beta, True, move[0], move[1], move[2], move[3], move[4], best_move)
+                if eval_score < min_eval:
+                    min_eval = eval_score
+                    if depth == 0:
+                        best_move[0], best_move[1], best_move[2], best_move[3], best_move[4] = move[0], move[1], move[2], move[3], move[4]
+                beta = min(beta, eval_score)
+                if beta <= alpha:
                     break
-            return minEval
-        
+            return min_eval
+      
+    #TODO
+    #implementirati funkciju koja prevodi stanje u niz cinjenica
+    #formulisati skup pravila 
+    #nad nizom cinjenica izvesti procenu na osnovu formiranog skupa pravila masinom zakljucivanja
 
+    def evaluate(self, row_from, col_from, row_to, col_to, pos_from): 
+        return self.board[row_to][col_to][1] #random vrednost, samo da bi se videlo da li radi minimax
 
-    def evaluate(self):
-        pass
 
     def terminal(self, row_from, col_from, row_to, col_to, pos_from):
         if(self.users[0].score + self.users[1].score < self.maxStacks - 1): #u sustini != ali ne bi trebalo da sme >
@@ -209,13 +233,14 @@ class Board:
         
         #ovde znaci da je poslednji potez
         return True
-    
+
+
     #ako je terminal, poziva se ova funkcija da odredi pobednika
     def stateValue(self, row_from, col_from):
         if(self.readBit(row_from, col_from, 7) == 1 and self.users[1].score > self.users[0].score):
-            return 1
+            return 10
         elif(self.readBit(row_from, col_from, 7) == 0 and self.users[0].score > self.users[1].score):
-            return -1
+            return -10
         else:
             return 0
             
@@ -419,6 +444,8 @@ class Board:
             for u in self.users:
                 if(u.color == resColor):
                     u.score += 1
+
+            self.writeBits(row, col, [0 for _ in range(8)], 8, True)
 
 
     def isOver(self):

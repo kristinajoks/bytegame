@@ -37,19 +37,13 @@ while starting:
                     running = True 
 
 
-        selected_white_black = white_black_dropdown.get_selected()
-        selected_board_size = board_size_dropdown.get_selected()
+        selected_white_black = 1 if white_black_dropdown.get_selected() == "White" else 0
+        selected_board_size = 8 if board_size_dropdown.get_selected() == "8x8" else 10 if board_size_dropdown.get_selected() == "10x10" else 16
 
         white_black_dropdown.handle_event(event)
         board_size_dropdown.handle_event(event)
 
-        if selected_board_size is not None:
-            if selected_board_size == "8x8":
-                board = Board(8, 560, [50, 50])
-            elif selected_board_size == "10x10":
-                board = Board(10, 560, [50, 50])
-            elif selected_board_size == "16x16":
-                board = Board(16, 560, [50, 50])
+        board = Board(selected_board_size, 560, [50, 50], not selected_white_black)
 
     white_black_dropdown.draw()
     board_size_dropdown.draw()
@@ -69,10 +63,14 @@ gameOver = False
 pygame.font.init()
 font = pygame.font.Font(None, 36)
 
+computerPlayed = False
+computer_move_start_time = 0
+computer_move_delay = 2000 
+
 while running:
     background = screenGame.fill((245, 243, 240))
     board.drawMatrix(screenGame)
-
+    
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
@@ -80,10 +78,11 @@ while running:
             movement[0], movement[1] = pygame.mouse.get_pos()
         if event.type == pygame.MOUSEBUTTONUP:
             movement[2], movement[3] = pygame.mouse.get_pos()
-            if(not gameOver):
-                gameOver = board.move(movement)
-
-    board.drawMatrix(screenGame)
+            if(not gameOver and board.computer != board.currentPlayer):
+                gameOver = board.play(movement)
+                computerPlayed = False                
+                computer_move_start_time = pygame.time.get_ticks()  
+                
 
     current_player = board.currentPlayer
     if current_player:
@@ -96,12 +95,19 @@ while running:
     #da se napravi da tekst ide gore levo ili dole desno u zavisnosti i od toga ko je izabran na pocetku
         #i da pise your turn za izabranu boju
 
+    if(not gameOver and board.computer == board.currentPlayer and not computerPlayed):
+        current_time = pygame.time.get_ticks()
+        if current_time - computer_move_start_time >= computer_move_delay:
+            board.play(None)
+            computerPlayed = True
+
+
     if gameOver == True:
         game_over_text = font.render("Game Over!", True, (0, 0, 0))
         screenGame.blit(game_over_text, (250, 20))
 
-    score_text = font.render(f"{board.users[0].score} : {board.users[1].score}", True, (0, 0, 0))
-    screenGame.blit(score_text, (250, 615))
+    score_text = font.render(f"(B) {board.users[0].score} : {board.users[1].score} (W)", True, (0, 0, 0))
+    screenGame.blit(score_text, (220, 615))
 
     pygame.display.flip()
    
