@@ -1,4 +1,5 @@
 from collections import deque
+import math
 import pygame
 from helpers.binary_helper import * 
 from models.user import User
@@ -166,6 +167,59 @@ class Board:
         if(self.isOver()):
             return True
         
+ 
+    min = -1000000
+    max = 1000000
+    def minimax(self, depth, alpha, beta, isMaxPlayer, row_from, col_from, row_to, col_to, pos_from):
+        if(self.terminal(row_from, col_from, row_to, col_to, pos_from)):
+            return self.stateValue(row_from, col_from)
+        
+        if(depth == math.log(self.dim, 2)):
+            return self.evaluate()
+        
+        if (isMaxPlayer):
+            maxEval = self.min
+            for move in self.calculate_all_possible_moves():
+                eval = self.minimax(depth + 1, alpha, beta, False, move[0], move[1], move[2], move[3], 0)
+                maxEval = max(maxEval, eval)
+                alpha = max(alpha, eval)
+                if(beta <= alpha):
+                    break
+            return maxEval
+        else:
+            minEval = self.max
+            for move in self.calculate_all_possible_moves():
+                eval = self.minimax(depth + 1, alpha, beta, True, move[0], move[1], move[2], move[3], 0)
+                minEval = min(minEval, eval)
+                beta = min(beta, eval)
+                if(beta <= alpha):
+                    break
+            return minEval
+        
+
+
+    def evaluate(self):
+        pass
+
+    def terminal(self, row_from, col_from, row_to, col_to, pos_from):
+        if(self.users[0].score + self.users[1].score < self.maxStacks - 1): #u sustini != ali ne bi trebalo da sme >
+            return False
+        if(self.board[row_from][col_from][1] - pos_from + self.board[row_to][col_to][1] < 8): #isto !=
+            return False
+        
+        #ovde znaci da je poslednji potez
+        return True
+    
+    #ako je terminal, poziva se ova funkcija da odredi pobednika
+    def stateValue(self, row_from, col_from):
+        if(self.readBit(row_from, col_from, 7) == 1 and self.users[1].score > self.users[0].score):
+            return 1
+        elif(self.readBit(row_from, col_from, 7) == 0 and self.users[0].score > self.users[1].score):
+            return -1
+        else:
+            return 0
+            
+
     def valid_move(self, row1, col1, row2, col2, bit):
         if(row1 == row2 or col1 == col2):
             return None
@@ -180,7 +234,6 @@ class Board:
         if(self.currentPlayer == 1 and bit == 0 or self.currentPlayer == 0 and bit == 1):
             return None
         
-        # Provera da li je potez dijagonalan
         diag = self.diagonal(row1, col1, row2, col2)
         return diag if diag is not None else None
 
@@ -260,8 +313,6 @@ class Board:
                 if(lista is None or len(lista) == 0):
                     return False
 
-                # print(lista) #ovde sada vraca listu dozvoljenog kretanja za bit koji sam pomerila!!!
-                # return True 
                 return lista            
                
                 #treba prvo da se vidi da li je neki bit bolji za pomeranje pa da se zove za njega
