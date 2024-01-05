@@ -30,7 +30,6 @@ class Board:
                         else:
                             self.writeBits(row, col, [0], 1, False)
 
-
     def drawMatrix(self, screen):
         x_offset = 0
         y_offset = 0
@@ -71,7 +70,6 @@ class Board:
             x_offset = 0
             y_offset += self.squareSize
 
-
     def readBit(self, row, col, pos): #positionFrom
         if pos >= 0:
             byte = self.board[row][col][0]
@@ -80,7 +78,6 @@ class Board:
             return result > 0
         else:
             return None
-
 
     def writeBits(self, row, col, bits, numOfBits, overwrite): #dodati poziciju sa koje se pomera
         
@@ -109,7 +106,6 @@ class Board:
             pos = self.board[row][col][1] - numOfBits
 
         self.board[row][col] = (byte, pos)
-
 
     def play(self, movement):        
 
@@ -177,8 +173,7 @@ class Board:
 
         if(self.isOver()):
             return True
-        
-    
+         
     NEG_INFINITY = float('-inf')
     POS_INFINITY = float('inf')
  
@@ -438,7 +433,7 @@ class Board:
                 
                 print(nearest_nonzero)
 
-                if nearest_nonzero: 
+                if nearest_nonzero:
                     return nearest_nonzero      
                 else:
                     return False
@@ -465,17 +460,19 @@ class Board:
 
             if len(lista) == 0:
                 if len(my_dict) >= 1:
-                    allowed_elements = {k: v for k, v in allowed_elements.items() if k is not None}
-                    return allowed_elements
+                    allowed_elements = {k: v for k, v in allowed_elements.items() if k is not None}  
+                    if len(allowed_elements) > 0:
+                        return allowed_elements
+                    else:
+                        elements_to_add = list(queue)[:counter]
+                        lista.extend(elements_to_add)
                 else: #naredna distanca, da znam zbog vracanja unazad
-                    for _ in range(counter):
-                        if queue:
-                            lista.append(queue.popleft())
-                        else:
-                            break
+                    elements_to_add = list(queue)[:counter]
+                    lista.extend(elements_to_add)
+
             else:
                 current_row, current_col= queue.popleft()
-                lista2.clear()
+                #lista2.clear()
                 lista.remove((current_row,current_col))
                 visited[current_row][current_col] = True
                 
@@ -484,10 +481,10 @@ class Board:
                     new_row, new_col = current_row + dr, current_col + dc
                     distance = self.calculate_distance(start_row, new_row, start_col, new_col)
                     #value
-                    lista2.append((new_row,new_col))
-                    my_dict = {(current_row, current_col): lista2}
+                    #lista2.append((new_row,new_col))
+                    my_dict[(current_row, current_col)] = (new_row, new_col)
 
-                    if(new_row > 0 and new_row < self.dim and new_col > 0 and new_col < self.dim): #dodata provera
+                    if(new_row >= 0 and new_row < self.dim and new_col >= 0 and new_col < self.dim): #dodata provera
                         if self.board[new_row][new_col][1] > 0:
                             if(distance == 2):
                                 allowed_elements[(current_row,current_col)] = distance
@@ -499,6 +496,8 @@ class Board:
                         queue.append((new_row, new_col))
 
                     counter += 1
+
+        allowed_elements = {k: v for k, v in allowed_elements.items() if k is not None}             
         return allowed_elements
 
 
@@ -525,7 +524,6 @@ class Board:
                     neighbors = value 
                     if current in neighbors:
                         queue.append((key, path + [key]))
-
         return None
 
 
@@ -569,7 +567,7 @@ class Board:
                     if bit == self.currentPlayer:  # da li odgovara trenutnom igracu
                         for dr, dc in [(-1, -1), (-1, 1), (1, -1), (1, 1)]:
                             new_row, new_col = row + dr, col + dc
-                            if 0 <= new_row < self.dim and 0 <= new_col < self.dim:
+                            if 0 <= new_row < self.dim and 0 <= new_col < self.dim: #mogla bi da se unapredi provera da ako je tu crni bit prvi ne proverava dalje takodje jer sigurno ne moze da se pomeri
                                 # validnost
                                 if self.valid_move(row, col, new_row, new_col, bit):   
                                     keys_from_stack_rules = self.stackRules(row, col, new_row, new_col, bit_position)
