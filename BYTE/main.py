@@ -91,9 +91,6 @@ while running:
     else:
         current_player_text = font.render("Black's Turn", True, (0, 0, 0))
         screenGame.blit(current_player_text, (60, 20))
-    #TODO
-    #da se napravi da tekst ide gore levo ili dole desno u zavisnosti i od toga ko je izabran na pocetku
-        #i da pise your turn za izabranu boju
 
     if(not gameOver and board.computer == board.currentPlayer and not computerPlayed):
         current_time = pygame.time.get_ticks()

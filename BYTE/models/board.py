@@ -137,10 +137,9 @@ class Board:
 
         else:
             best_move = [0, 0, 0, 0, 0] 
-            #pitanje da li treba da se salje row i col to i kako da se inicijaizuje pokret
             self.minimax(0, self.NEG_INFINITY, self.POS_INFINITY, True, 1, 1, 0, 0, 0, best_move) 
 
-            self.move(best_move[0], best_move[1], best_move[2], best_move[3], best_move[4]) #bice parametar move
+            self.move(best_move[0], best_move[1], best_move[2], best_move[3], best_move[4]) 
 
 
     def move(self, row1, col1, row2, col2, positionFrom): 
@@ -260,8 +259,6 @@ class Board:
         else:
             return 0
         
-    #ukoliko je popunjenost table veca od 50% onda se gleda da li je potez ka centru
-    #u suprotnom se gleda da li je u pravcu najblizeg steka
     def evaluate_direction(self, row_from, col_from, row_to, col_to):
         non_empty_elements = 0
 
@@ -284,8 +281,6 @@ class Board:
                 total_score += col_to - col_from + self.dim/2 - col_from
             else:
                 total_score += col_from - col_to + col_from - self.dim/2
-        #else:
-            #dijag
         
         return total_score
 
