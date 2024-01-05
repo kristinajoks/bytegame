@@ -406,28 +406,23 @@ class Board:
 
 
     def stackRules(self, row1, col1, row2, col2, positionFrom):
+        nearest_nonzero = dict()
+
         #pozicija sa koje se pomera je u rangu
         if(positionFrom < 0 or positionFrom >= self.board[row1][col1][1]):
             return None
         
-        nearest_nonzero = dict()
         #broj ukupnih bitova na novom steku je manji od 8
         if(self.board[row2][col2][1] + self.board[row1][col1][1] - positionFrom > 8):
             return False
 
-        #bitovi se pomeraju na visu ili jednaku poziciju
-        #to ne vazi kad su sva polja okolo prazna 
         if(positionFrom > self.board[row2][col2][1]):
             return False
 
         if(positionFrom == self.board[row2][col2][1]): 
             if(self.areDiagonalEmpty(row1, col1)):
                 #naci najblizi stek i proveriti da li je u pravcu
-                #ako jeste, onda je dozvoljeno
                 nearest_nonzero = self.find_nearest_nonzero(row1, col1)
-                
-                print(nearest_nonzero)
-
                 if nearest_nonzero:
                     return nearest_nonzero      
                 else:
@@ -467,7 +462,7 @@ class Board:
 
             else:
                 current_row, current_col= queue.popleft()
-                #lista2.clear()
+                lista2.clear()
                 lista.remove((current_row,current_col))
                 visited[current_row][current_col] = True
                 
@@ -476,8 +471,8 @@ class Board:
                     new_row, new_col = current_row + dr, current_col + dc
                     distance = self.calculate_distance(start_row, new_row, start_col, new_col)
                     #value
-                    #lista2.append((new_row,new_col))
-                    my_dict[(current_row, current_col)] = (new_row, new_col)
+                    lista2.append((new_row,new_col))
+                    my_dict[(current_row, current_col)] = lista2
 
                     if(new_row >= 0 and new_row < self.dim and new_col >= 0 and new_col < self.dim): #dodata provera
                         if self.board[new_row][new_col][1] > 0:
@@ -554,9 +549,9 @@ class Board:
         possible_moves_empty_diagonals = []
 
         for row in range(self.dim):
-            for col in range(self.dim): #mogu da napisem row +1 i range 7 jer nikad ne ide u prvu i poslednjucvrstu
+            for col in range(self.dim): 
 
-                # za svaki bit, ali dovoljno je da jednom bude True, ako ima vise belih u steku ispitivace za svakog a ne mora
+                # za svaki bit
                 for bit_position in range(self.board[row][col][1] - 1, -1, -1):
                     bit = self.readBit(row, col, bit_position)
                     if bit == self.currentPlayer:  # da li odgovara trenutnom igracu
@@ -571,17 +566,14 @@ class Board:
                                         for move in new_moves:
                                             if move not in possible_moves_empty_diagonals:
                                                 possible_moves_empty_diagonals.append(move)
-                                                print(possible_moves_empty_diagonals)
-                                                print(new_moves)
-                                                print(move)
-                                                print("Tu sam")
+
                                     if keys_from_stack_rules is True: #ovde bi bio najbolji potez
                                         possible_moves_best.append((row, col, new_row, new_col, bit_position))
 
         if len(possible_moves_best) == 0:
             min_v = min(item[4] for item in possible_moves_empty_diagonals)
             possible_moves_empty_diagonals = [(elem[0], elem[1], elem[2], elem[3], elem[5]) for elem in possible_moves_empty_diagonals if elem[4] == min_v]
-            print(possible_moves_empty_diagonals)
+
             return possible_moves_empty_diagonals
                                     
         return possible_moves_best
