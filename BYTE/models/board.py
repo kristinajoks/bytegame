@@ -140,7 +140,7 @@ class Board:
             self.move(row1, col1, row2, col2, positionFrom)
 
         else:
-            best_move = [4, 4, 0, 0, 0] 
+            best_move = [0, 0, 0, 0, 0] 
             #pitanje da li treba da se salje row i col to i kako da se inicijaizuje pokret
             self.minimax(0, self.NEG_INFINITY, self.POS_INFINITY, True, 1, 1, 0, 0, 0, best_move) 
 
