@@ -288,7 +288,7 @@ class Board:
         total_score = 0 
         if(self.readBit(row_to, col_to, self.board[row_to][col_to][1] - 1) != self.computer):
             total_score += 4
-        if (self.board[row_to][col_to][1] + self.board[row_from][col_from][1] - pos_from - 1) % 2 == 0:
+        if (self.board[row_to][col_to][1] - 1) % 2 == 0:
             total_score += 4
         return total_score
 
