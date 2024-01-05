@@ -136,7 +136,7 @@ class Board:
             self.move(row1, col1, row2, col2, positionFrom)
 
         else:
-            best_move = [0, 0, 0, 0, 0] 
+            best_move = [4, 4, 0, 0, 0] 
             #pitanje da li treba da se salje row i col to i kako da se inicijaizuje pokret
             self.minimax(0, self.NEG_INFINITY, self.POS_INFINITY, True, 1, 1, 0, 0, 0, best_move) 
 
@@ -146,8 +146,6 @@ class Board:
     def move(self, row1, col1, row2, col2, positionFrom): 
         
         validFields = self.calculate_all_possible_moves() 
-        #vrati dozvoljene za sve pozicije nevezano za to da li postoji bolji
-        #ili ne malo sam zbunjena
 
         if(validFields is None or len(validFields) == 0): #ako nema dozvoljenih poteza prepusta se
             self.currentPlayer = 0 if self.currentPlayer == 1 else 1 
@@ -184,7 +182,7 @@ class Board:
             return self.state_value(row_from, col_from)
 
         if depth == math.log(self.dim, 2):
-            return self.evaluate(row_from, col_from, row_to, col_to, pos_from)
+            return self.evaluate(is_max_player, row_from, col_from, row_to, col_to, pos_from)
 
         if is_max_player:
             max_eval = self.NEG_INFINITY
@@ -210,28 +208,132 @@ class Board:
                 if beta <= alpha:
                     break
             return min_eval
-      
-    #TODO
-    #implementirati funkciju koja prevodi stanje u niz cinjenica
-    #formulisati skup pravila 
-    #nad nizom cinjenica izvesti procenu na osnovu formiranog skupa pravila masinom zakljucivanja
+       
 
-    def evaluate(self, row_from, col_from, row_to, col_to, pos_from): 
-        return self.board[row_to][col_to][1] #random vrednost, samo da bi se videlo da li radi minimax
+    def evaluate(self, is_max_player, row_from, col_from, row_to, col_to, pos_from): 
+        total_score = 0
+
+        #tezine su u zbiru 10
+        piece_count_weight = 1
+        piece_number_weight = 1
+        sum_of_pieces_weight = 1
+        top_color_weight = 1
+        new_position_weight = 1
+        direction_weight = 4
+        stack_division_weight = 1
+    
+        piece_count_score = self.evaluate_piece_count()
+        total_score += piece_count_score * piece_count_weight
+
+        piece_number_score = self.evaluate_piece_number(row_from, col_from)
+        total_score += piece_number_score * piece_number_weight
+
+        sum_of_pieces_score = self.evaluate_sum_of_pieces(row_from, col_from, row_to, col_to, pos_from)
+        total_score += sum_of_pieces_score * sum_of_pieces_weight
+
+        top_color_score = self.evaluate_top_color(row_from, col_from)
+        total_score += top_color_score * top_color_weight
+
+        new_position_score = self.evaluate_new_position(row_from, col_from, row_to, col_to, pos_from)
+        total_score += new_position_score * new_position_weight
+
+        direction_score = self.evaluate_direction(row_from, col_from, row_to, col_to)
+        total_score += direction_score * direction_weight
+
+        stack_division_score = 0
+        if pos_from != 0:
+            stack_division_score = self.evaluate_stack_division(row_from, col_from, row_to, col_to, pos_from)
+        total_score += stack_division_score * stack_division_weight
+
+        total_score /= 5.6
+
+        if(is_max_player):
+            return total_score
+        else:
+            return -total_score
+
+
+    
+    def evaluate_stack_division(self, row_from, col_from, row_to, col_to, pos_from):
+        if( self.readBit(row_from, col_from, pos_from - 1) == self.computer):
+            return 8
+        else:
+            return 0
+        
+    #ukoliko je popunjenost table veca od 50% onda se gleda da li je potez ka centru
+    #u suprotnom se gleda da li je u pravcu najblizeg steka
+    def evaluate_direction(self, row_from, col_from, row_to, col_to):
+        non_empty_elements = 0
+
+        for row in self.board:
+            for element in row:
+                if(element[1]>0):
+                    non_empty_elements += 1
+        
+        occupancy = non_empty_elements / self.bit
+        
+        total_score = 0
+
+        if(occupancy > 0.5):
+            if(row_from < self.dim/2):
+                total_score += row_to - row_from + self.dim/2 - row_from
+            else: 
+                total_score += row_from - row_to + row_from - self.dim/2
+
+            if(col_from < self.dim/2):
+                total_score += col_to - col_from + self.dim/2 - col_from
+            else:
+                total_score += col_from - col_to + col_from - self.dim/2
+        #else:
+            #dijag
+        
+        return total_score
+
+    def evaluate_new_position(self, row_from, col_from, row_to, col_to, pos_from):
+        total_score = 0 
+        if(self.readBit(row_to, col_to, self.board[row_to][col_to][1] - 1) != self.computer):
+            total_score += 4
+        if (self.board[row_to][col_to][1] + self.board[row_from][col_from][1] - pos_from - 1) % 2 == 0:
+            total_score += 4
+        return total_score
+
+    def evaluate_top_color(self, row_from, col_from):
+        if self.readBit(row_from, col_from, self.board[row_from][col_from][1] - 1) == self.computer:
+            return 8
+        return 0
+
+    def evaluate_sum_of_pieces(self, row_from, col_from, row_to, col_to, pos_from):
+        return self.board[row_to][col_to][1] + self.board[row_from][col_from][1] - pos_from 
+
+    def evaluate_piece_number(self, row, col):
+        return 8 - self.board[row][col][1] 
+
+    def evaluate_piece_count(self):
+        max_count = 0
+        min_count = 0
+
+        for row in range(self.dim):
+            for col in range(self.dim):
+                for i in range(self.board[row][col][1]):
+                    if self.readBit(row, col, i):
+                        max_count += 1
+                    else:
+                        min_count += 1
+        
+        return max_count - min_count
 
 
     def terminal(self, row_from, col_from, row_to, col_to, pos_from):
-        if(self.users[0].score + self.users[1].score < self.maxStacks - 1): #u sustini != ali ne bi trebalo da sme >
+        if(self.users[0].score + self.users[1].score < self.maxStacks - 1): 
             return False
-        if(self.board[row_from][col_from][1] - pos_from + self.board[row_to][col_to][1] < 8): #isto !=
+        if(self.board[row_from][col_from][1] - pos_from + self.board[row_to][col_to][1] < 8):
             return False
         
-        #ovde znaci da je poslednji potez
         return True
 
 
-    #ako je terminal, poziva se ova funkcija da odredi pobednika
-    def stateValue(self, row_from, col_from):
+    #ako je terminal, ova funkcija odredjuje pobednika
+    def stateValueTerminal(self, row_from, col_from):
         if(self.readBit(row_from, col_from, 7) == 1 and self.users[1].score > self.users[0].score):
             return 10
         elif(self.readBit(row_from, col_from, 7) == 0 and self.users[0].score > self.users[1].score):
@@ -452,7 +554,7 @@ class Board:
     def calculate_all_possible_moves(self): 
         possible_moves_best = []
         possible_moves_empty_diagonals = []
-        possible_moves = []
+
         for row in range(self.dim):
             for col in range(self.dim): #mogu da napisem row +1 i range 7 jer nikad ne ide u prvu i poslednjucvrstu
 
@@ -479,7 +581,7 @@ class Board:
                                         possible_moves_best.append((row, col, new_row, new_col, bit_position))
 
         if len(possible_moves_best) == 0:
-            min_v = min(item[2] for item in possible_moves_empty_diagonals)
+            min_v = min(item[4] for item in possible_moves_empty_diagonals)
             possible_moves_empty_diagonals = [(elem[0], elem[1], elem[2], elem[3], elem[5]) for elem in possible_moves_empty_diagonals if elem[4] == min_v]
             print(possible_moves_empty_diagonals)
             return possible_moves_empty_diagonals
