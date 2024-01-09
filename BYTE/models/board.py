@@ -178,10 +178,11 @@ class Board:
  
     def minimax(self, depth, alpha, beta, is_max_player, row_from, col_from, row_to, col_to, pos_from, best_move):
         if self.terminal(row_from, col_from, row_to, col_to, pos_from):
-            return self.state_value(row_from, col_from)
+            return self.stateValueTerminal(row_from, col_from)
 
         if depth == math.log(self.dim, 2):
             return self.evaluate(is_max_player, row_from, col_from, row_to, col_to, pos_from)
+            # return self.state_value(is_max_player)
 
         if is_max_player:
             max_eval = self.NEG_INFINITY
@@ -207,7 +208,65 @@ class Board:
                 if beta <= alpha:
                     break
             return min_eval
-       
+
+
+    def state_value(self, is_max_player):
+        total_score = 0
+
+        #tezine su u zbiru 10
+        piece_count_weight = 3 #koliko ih ima na tabli (+1 svaki put kada se nadju)
+        piece_height_weight = 1 #koliko su visoko u stekovima  
+        piece_parity_weight = 1 #da li su pozicije parne 
+        piece_topping_weight = 1 #+ da li je ispod tudja boja
+        sum_of_stack_height = 1 #koliko su visoki stekovi u kojima se nalaze
+        top_color_weight = 2 #na vrhu koliko stekova je boja trenutnog igraca
+        position_weight = 1 #da li su orijentisane oko centralnog polja
+
+        piece_count = 0
+        pieces_height = 0
+        pieces_parity = 0
+        pieces_topping = 0
+        stacks_height = 0
+        top_color_weight_num = 0
+        position_weight_num = 0
+
+        for row in range(self.dim):
+            for col in range(self.dim):
+                for i in range(self.board[row][col][1]):
+                    if self.readBit(row, col, i) == self.computer:
+                        piece_count += 1
+                        pieces_height += i
+
+                        if(i % 2 == 0):
+                            pieces_parity += 1
+                        
+                        if(self.readBit(row, col, i-1) != self.computer):
+                            pieces_topping += 1
+                        
+                        stacks_height += self.board[row][col][1]
+
+                        if( i == self.board[row][col][1] - 1):
+                            top_color_weight_num += 1
+                        
+                        if(row > self.dim/2 - self.dim/4 or row < self.dim/2 + self.dim/4 
+                           and col > self.dim/2 - self.dim/4 or col < self.dim/2 + self.dim/4):
+                            position_weight_num += 1
+
+        total_score = piece_count * piece_count_weight 
+        + pieces_height * piece_height_weight
+        + pieces_parity * piece_parity_weight
+        + pieces_topping * piece_topping_weight
+        + stacks_height * sum_of_stack_height
+        + top_color_weight_num * top_color_weight
+        + position_weight_num * position_weight
+
+        total_score /= 5.6
+
+        if(is_max_player):
+                return total_score
+        else:
+            return -total_score
+
 
     def evaluate(self, is_max_player, row_from, col_from, row_to, col_to, pos_from): 
         total_score = 0
@@ -252,7 +311,6 @@ class Board:
             return -total_score
 
 
-    
     def evaluate_stack_division(self, row_from, col_from, row_to, col_to, pos_from):
         if( self.readBit(row_from, col_from, pos_from - 1) == self.computer):
             return 8
@@ -284,6 +342,7 @@ class Board:
         
         return total_score
 
+
     def evaluate_new_position(self, row_from, col_from, row_to, col_to, pos_from):
         total_score = 0 
         if(self.readBit(row_to, col_to, self.board[row_to][col_to][1] - 1) != self.computer):
@@ -292,16 +351,20 @@ class Board:
             total_score += 4
         return total_score
 
+
     def evaluate_top_color(self, row_from, col_from):
         if self.readBit(row_from, col_from, self.board[row_from][col_from][1] - 1) == self.computer:
             return 8
         return 0
 
+
     def evaluate_sum_of_pieces(self, row_from, col_from, row_to, col_to, pos_from):
         return self.board[row_to][col_to][1] + self.board[row_from][col_from][1] - pos_from 
 
+
     def evaluate_piece_number(self, row, col):
         return 8 - self.board[row][col][1] 
+
 
     def evaluate_piece_count(self):
         max_count = 0
@@ -329,9 +392,9 @@ class Board:
 
     #ako je terminal, ova funkcija odredjuje pobednika
     def stateValueTerminal(self, row_from, col_from):
-        if(self.readBit(row_from, col_from, 7) == 1 and self.users[1].score > self.users[0].score):
+        if(self.readBit(row_from, col_from, self.board[row_from][col_from][1] - 1) == 1 and self.users[1].score > self.users[0].score):
             return 10
-        elif(self.readBit(row_from, col_from, 7) == 0 and self.users[0].score > self.users[1].score):
+        elif(self.readBit(row_from, col_from, self.board[row_from][col_from][1] - 1) == 0 and self.users[0].score > self.users[1].score):
             return -10
         else:
             return 0
