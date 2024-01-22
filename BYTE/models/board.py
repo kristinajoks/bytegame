@@ -133,13 +133,13 @@ class Board:
             else:
                 positionFrom = int(clicked_bit)
 
-            self.move(row1, col1, row2, col2, positionFrom)
+            return self.move(row1, col1, row2, col2, positionFrom)
 
         else:
             best_move = [0, 0, 0, 0, 0] 
             self.minimax(0, self.NEG_INFINITY, self.POS_INFINITY, True, 1, 1, 0, 0, 0, best_move) 
 
-            self.move(best_move[0], best_move[1], best_move[2], best_move[3], best_move[4]) 
+            return self.move(best_move[0], best_move[1], best_move[2], best_move[3], best_move[4]) 
 
 
     def move(self, row1, col1, row2, col2, positionFrom): 
@@ -181,8 +181,8 @@ class Board:
             return self.stateValueTerminal(row_from, col_from)
 
         if depth == math.log(self.dim, 2):
-            return self.evaluate(is_max_player, row_from, col_from, row_to, col_to, pos_from)
-            # return self.state_value(is_max_player)
+            # return self.evaluate(is_max_player, row_from, col_from, row_to, col_to, pos_from)
+            return self.state_value(is_max_player)
 
         if is_max_player:
             max_eval = self.NEG_INFINITY
@@ -252,6 +252,8 @@ class Board:
                            and col > self.dim/2 - self.dim/4 or col < self.dim/2 + self.dim/4):
                             position_weight_num += 1
 
+                            total_score += self.is_last_bit(row, col) * 10
+
         total_score = piece_count * piece_count_weight 
         + pieces_height * piece_height_weight
         + pieces_parity * piece_parity_weight
@@ -279,7 +281,9 @@ class Board:
         new_position_weight = 1
         direction_weight = 4
         stack_division_weight = 1
-    
+
+        total_score += self.is_last_bit(row_to, col_to) * 10
+
         piece_count_score = self.evaluate_piece_count()
         total_score += piece_count_score * piece_count_weight
 
@@ -310,6 +314,8 @@ class Board:
         else:
             return -total_score
 
+    def is_last_bit(self, row, col):
+        return self.board[row][col][1] == 7
 
     def evaluate_stack_division(self, row_from, col_from, row_to, col_to, pos_from):
         if( self.readBit(row_from, col_from, pos_from - 1) == self.computer):
@@ -317,7 +323,7 @@ class Board:
         else:
             return 0
         
-        
+
     def evaluate_direction(self, row_from, col_from, row_to, col_to):
         non_empty_elements = 0
 

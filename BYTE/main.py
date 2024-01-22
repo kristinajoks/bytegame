@@ -95,7 +95,7 @@ while running:
     if(not gameOver and board.computer == board.currentPlayer and not computerPlayed):
         current_time = pygame.time.get_ticks()
         if current_time - computer_move_start_time >= computer_move_delay:
-            board.play(None)
+            gameOver = board.play(None)
             computerPlayed = True
 
 
