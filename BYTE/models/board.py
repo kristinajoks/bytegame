@@ -632,8 +632,9 @@ class Board:
                                         possible_moves_best.append((row, col, new_row, new_col, bit_position))
 
         if len(possible_moves_best) == 0:
-            min_v = min(item[4] for item in possible_moves_empty_diagonals)
-            possible_moves_empty_diagonals = [(elem[0], elem[1], elem[2], elem[3], elem[5]) for elem in possible_moves_empty_diagonals if elem[4] == min_v]
+            if(len(possible_moves_empty_diagonals) != 0):
+                min_v = min(item[4] for item in possible_moves_empty_diagonals)
+                possible_moves_empty_diagonals = [(elem[0], elem[1], elem[2], elem[3], elem[5]) for elem in possible_moves_empty_diagonals if elem[4] == min_v]
 
             return possible_moves_empty_diagonals
                                     
