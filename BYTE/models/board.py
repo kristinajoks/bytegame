@@ -538,7 +538,7 @@ class Board:
                     my_dict[(current_row, current_col)] = lista2.copy()
 
                     if(new_row >= 0 and new_row < self.dim and new_col >= 0 and new_col < self.dim): #dodata provera
-                        if self.board[new_row][new_col][1] > 0:
+                        if (self.board[new_row][new_col][1] > 0 and distance != 0):
                             if(distance == 2):
                                 allowed_elements[(current_row,current_col)] = distance
                             else:
@@ -581,10 +581,7 @@ class Board:
 
 
     def calculate_distance(self, start_row, current_row, start_col, current_col):
-        if(start_row == current_row): 
-            return abs(start_col - current_col)
-        
-        return abs(start_row - current_row)
+        return max(abs(start_col - current_col), abs(start_row - current_row))
         
     
     def updateScore(self, row, col):
