@@ -252,7 +252,7 @@ class Board:
                            and col > self.dim/2 - self.dim/4 or col < self.dim/2 + self.dim/4):
                             position_weight_num += 1
 
-                            total_score += self.is_last_bit(row, col) * 10
+                            total_score += self.is_last_bit(row, col) * 100
 
         total_score = piece_count * piece_count_weight 
         + pieces_height * piece_height_weight
@@ -262,7 +262,8 @@ class Board:
         + top_color_weight_num * top_color_weight
         + position_weight_num * position_weight
 
-        total_score /= 5.6
+        # total_score /= 5.6
+        total_score /= 10
 
         if(is_max_player):
                 return total_score
