@@ -504,10 +504,10 @@ class Board:
             if 0 < start_row + dr < len(self.board) and 0 < start_col + dc < len(self.board[0])
             ])
 
-        lista = list(queue)
+        lista = list(queue).copy()
         lista2 = list()
         allowed_elements = dict()
-        my_dict = {(start_row, start_col): lista}
+        my_dict = {(start_row, start_col): lista.copy()}
         counter = 0
         while queue:
 
@@ -535,7 +535,7 @@ class Board:
                     distance = self.calculate_distance(start_row, new_row, start_col, new_col)
                     #value
                     lista2.append((new_row,new_col))
-                    my_dict[(current_row, current_col)] = lista2
+                    my_dict[(current_row, current_col)] = lista2.copy()
 
                     if(new_row >= 0 and new_row < self.dim and new_col >= 0 and new_col < self.dim): #dodata provera
                         if self.board[new_row][new_col][1] > 0:
