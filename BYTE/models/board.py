@@ -317,6 +317,7 @@ class Board:
         else:
             return 0
         
+        
     def evaluate_direction(self, row_from, col_from, row_to, col_to):
         non_empty_elements = 0
 
